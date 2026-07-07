@@ -1,8 +1,8 @@
 ---
-title: "windkanal: test your tools before they meet real patients"
+title: "windkanal: test your tools before they meet real data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{windkanal: test your tools before they meet real patients}
+  %\VignetteIndexEntry{windkanal: test your tools before they meet real data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

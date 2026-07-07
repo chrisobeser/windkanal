@@ -3,9 +3,9 @@
 [![R-CMD-check](https://github.com/chrisobeser/windkanal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chrisobeser/windkanal/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**A wind tunnel for psychotherapy statistics: simulated clinics with
-known ground truth, so you can test your tools before they meet real
-patients.**
+**A wind tunnel for psychotherapy statistics: simulated clinics in
+which the true effects are known, so you can test your tools before
+they meet real data.**
 
 Psychotherapy data have a shape of their own. Patients are nested in
 therapists, outcomes arrive session by session, people drop out, and
@@ -170,9 +170,11 @@ the issue tracker.
       real cluster structures while keeping the injected truth known
 - [ ] **Continuous treatment**: dose as a treatment axis, for
       questions where amount matters more than assignment
-- [ ] **Richer measurement layer**: per-item loadings and
-      difficulties, additional careless-responding styles, item-level
-      missingness with prorating
+- [ ] **Questionnaire layer, next stage**: per-item loadings and
+      IRT-style difficulties, additional careless-responding styles
+      beyond straightlining, item-level missingness with prorating,
+      and response shift (participants recalibrating their answer
+      scale over the course of therapy)
 - [ ] **Bounded and skewed outcomes**: floor and ceiling effects for
       questionnaire-realistic score distributions
 - [ ] **Community presets**: calibrated settings for other services
