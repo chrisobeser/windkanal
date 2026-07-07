@@ -1,5 +1,8 @@
 # windkanal <img src="man/figures/logo.png" align="right" width="130" />
 
+[![R-CMD-check](https://github.com/chrisobeser/windkanal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chrisobeser/windkanal/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **A wind tunnel for psychotherapy statistics: simulated clinics with
 known ground truth, so you can test your tools before they meet real
 patients.**
@@ -24,35 +27,99 @@ indication, informative dropout, measurement error, and a
 session-wise therapeutic alliance that is coupled with symptoms in
 both directions.
 
-**Start from calibrated settings.** `preset("ambulanz_de")` encodes a
-German outpatient training clinic. Every number in a preset carries a
-citation and a verification status, and the register travels with the
-object: `attr(preset("ambulanz_de"), "sources")`.
-
-**Let estimators compete.** Twelve estimator classes run behind one
-interface and return comparable output: naive OLS, mixed models with
-Satterthwaite inference, per-arm regressions (PAI), T-, S-, X-, DR-
-and R-learners, model-based forests, causal forests (grf), and
-Bayesian causal forests (stochtree), with and without therapist
-random effects. Average-effect inference for the learners uses a
-therapist-cluster bootstrap.
-
-**Judge them fairly.** `mc_run()` repeats a question over seeded
-worlds and `mc_summary()` turns the answers into error rates: bias,
-interval coverage, false alarms, ranking quality, and PEHE.
+**Judge estimators fairly.** All estimators see the same worlds, the
+same features, and the same seeds. `mc_run()` repeats a question over
+many seeded worlds; `mc_summary()` turns the answers into error
+rates: bias, interval coverage, false alarms, ranking quality, and
+PEHE.
 
 **Test analysis habits, not just estimators.** `snapshot()` and
-`replay()` freeze and replay a growing data stream, so that
-continuous peeking can be compared with preregistered release gates
+`replay()` freeze and replay a growing data stream, so continuous
+peeking can be compared with preregistered release gates
 (`run_peek()`, `run_gates()`) on identical histories.
 
 **Go down to the item level.** `read_items()` ingests formr
-questionnaire tables while keeping only their structure; item texts,
-which are often copyrighted, never enter the package. `sim_items()`
+questionnaire tables while keeping only their structure (item texts,
+which are often copyrighted, never enter the package). `sim_items()`
 produces ordinal responses from latent states, including
-careless-responding behavior, and `scale_scores()` returns scale
-scores with reliability as a measured attribute rather than an
-assumption.
+careless-responding behavior; `scale_scores()` returns scale scores
+with reliability as a measured attribute rather than an assumption.
+
+## The estimator zoo
+
+Twelve estimator classes run behind one uniform interface:
+
+- **Naive OLS** (`fit_z_naive`) — treats every session as
+  independent; the field's historical default and the built-in
+  negative anchor
+- **Mixed model with Satterthwaite inference** (`fit_z_satt`) — the
+  classical correct tool for average effects under nesting
+- **Interaction variants** (`fit_zx_naive`, `fit_zx_satt`) — target
+  the moderation coefficient directly
+- **PAI, per-arm regressions** (`fit_cate_pai`) — the classic
+  personalized-advantage approach
+- **T-learner** (`fit_cate_tlearner`) — two separate random forests,
+  one per treatment arm
+- **S-learner** (`fit_cate_sboost`) — one gradient-boosting model
+  with treatment as a feature
+- **X-learner** (`fit_cate_xlearner`) — imputed individual effects
+  with a propensity-weighted blend
+- **DR-learner** (`fit_cate_drlearner`) — doubly robust
+  pseudo-outcomes, nuisances out-of-bag
+- **R-learner** (`fit_cate_rlearner`) — orthogonalized residuals in
+  the Nie-Wager style
+- **Model-based forest** (`fit_cate_mob`, model4you) — splits where
+  the treatment coefficient changes
+- **Causal forest** (`fit_het_grf`, `fit_cate_grf`; grf) — honesty
+  and cluster-robust inference switches included
+- **Bayesian causal forests** (`fit_cate_bcf`, `fit_cate_bcf_ml`;
+  bcf and stochtree) — with and without therapist random
+  intercepts, so the effect of modeling the nesting is itself
+  testable
+
+Average-effect inference for the learners uses a therapist-cluster
+bootstrap; performance measures include dual coverage definitions,
+rejection indicators that honor degrees-of-freedom corrections,
+ranking correlation, and PEHE.
+
+## Calibrated presets, including your own
+
+A preset is a set of `sim_stream()` arguments in which every number
+carries a citation and a verification status. The register travels
+with the object:
+
+```r
+p <- preset("ambulanz_de")   # German outpatient training clinic
+attr(p, "sources")           # every value, its source, its status
+```
+
+You can, and are encouraged to, define presets for **your own
+practice, clinic, hospital, or country**: a preset is simply a named
+list of `sim_stream()` arguments with a `sources` data frame attached
+as an attribute. The contract is the design rule, not the object
+class: values that claim realism carry a source, and values you could
+not calibrate are labelled open instead of silently guessed.
+
+```r
+meine_klinik <- list(
+  n_sessions = 12,      # your typical treatment length
+  icc        = 0.08,    # your therapist share of outcome variance
+  dropout    = 0.025    # your per-session discontinuation rate
+)
+attr(meine_klinik, "sources") <- data.frame(
+  parameter = c("n_sessions", "icc", "dropout"),
+  quelle    = c("clinic records 2024", "own MLM estimate", "open"),
+  status    = c("belegt", "belegt", "offen")
+)
+
+s <- do.call(sim_stream, c(meine_klinik,
+       list(n_therapists = 15, patients_per_therapist = 8,
+            tau = 0.3, seed = 1)))
+```
+
+Presets are combinable, and sample sizes deliberately stay out of
+them: how large your simulated clinic is remains a design choice, not
+a reality claim.
 
 ## Quick start
 
