@@ -2,6 +2,7 @@
 
 [![R-CMD-check](https://github.com/chrisobeser/windkanal/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/chrisobeser/windkanal/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](#status)
 
 **A wind tunnel for psychotherapy statistics: simulated clinics in
 which the true effects are known, so you can test your tools before
@@ -151,12 +152,16 @@ package's founding observation.
 
 ## Status
 
-Version 0.1.0. More than 220 unit tests, continuous integration on
-GitHub Actions, `R CMD check` clean. The data-generating equation has
-been independently reimplemented from its written specification and
-validated against the package. Validation studies built on windkanal
-are in preparation; the package itself is stable enough for
-methodological experiments and teaching.
+**Work in progress.** windkanal is an early pre-release (version
+0.1.0) under active development: interfaces may still change, and the
+package is currently in its testing phase. That said, development is
+test-driven from the start: more than 220 unit tests, continuous
+integration on GitHub Actions, `R CMD check` clean, and the
+data-generating equation has been independently reimplemented from its
+written specification and validated against the package. Validation
+studies built on windkanal are in preparation. Suitable today for
+methodological experiments and teaching; not yet for unsupervised
+production use.
 
 ## Roadmap
 
