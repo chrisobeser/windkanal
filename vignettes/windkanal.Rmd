@@ -1,262 +1,146 @@
 ---
-title: "windkanal: Warum lebende Datensysteme sich selbst täuschen — und wie man das verhindert"
+title: "windkanal: test your tools before they meet real patients"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{windkanal: Einfuehrung}
+  %\VignetteIndexEntry{windkanal: test your tools before they meet real patients}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
-                      fig.width = 6, fig.height = 4)
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## The problem this package solves
+
+Suppose you want to know whether a statistical tool keeps its promises
+on psychotherapy data: patients nested in therapists, outcomes arriving
+session by session, dropout, measurement error. On real data you can
+never check this, because the true effect is unknown. windkanal builds
+clinics in which the truth is known by construction, so any claim an
+estimator makes can be compared against what was actually put into the
+world.
+
+This vignette walks through one full cycle: build a world, let two
+estimators disagree, and turn that disagreement into a measured error
+rate.
+
+## Build a clinic
+
+`sim_stream()` returns one row per attended session. Here: 20
+therapists with 10 patients each, four sessions, treatment assigned at
+the patient level, a true average effect of 0.5, and a therapist share
+of outcome variance of 10 percent.
+
+```{r}
 library(windkanal)
-REPS <- 30  # klein gehalten, damit die Vignette schnell baut
-```
 
-## Die Idee in drei Sätzen
-
-Immer mehr Kliniken und Ambulanzen sammeln laufend Daten — jede Woche
-kommen Fälle dazu, und es ist verführerisch, immer wieder "mal zu
-schauen, ob sich schon ein Effekt zeigt". `windkanal` simuliert genau
-so ein wachsendes Versorgungs-Datensystem **mit bekannter Wahrheit**,
-damit man messen kann: Welche Auswertungs-Methoden und welche
-Prüf-Gewohnheiten halluzinieren Effekte, die es nicht gibt? Wie im
-Windkanal des Flugzeugbaus: erst das Modell testen, dann fliegen.
-
-## 1. Ein Datenstrom entsteht
-
-`sim_stream()` erzeugt eine erfundene Ambulanz: Therapeut:innen mit
-je eigenen "Hausniveaus" (ICC), Patient:innen, die gestaffelt über das
-Jahr eintreten und sitzungsweise einen Score liefern. Die Hälfte der
-Therapeut:innen hat ein "Treatment" `z` (z. B. nutzt ein
-Feedback-System) — dessen wahrer Effekt `tau` ist **einstellbar und
-hier: null**.
-
-```{r stream}
-s <- sim_stream(n_therapists = 12, patients_per_therapist = 6,
-                n_sessions = 4, icc = 0.20, tau = 0, seed = 1)
-head(s, 4)
-```
-
-## 2. Zusehen, wie sich Wissen schärft
-
-`snapshot()` friert den Strom zu einer Kalenderwoche ein — was man da
-schon sehen konnte. `replay()` fittet dasselbe Modell auf eine Folge
-von Snapshots: Der Unsicherheits-Balken schrumpft, während die Daten
-wachsen.
-
-```{r replay}
-s2 <- sim_stream(n_therapists = 10, patients_per_therapist = 10,
-                 n_sessions = 8, seed = 42)
-r <- replay(s2, at_weeks = c(10, 20, 30, 40, 50, 60))
-plot(r$snapshot_week, r$estimate, ylim = range(c(r$ci_low, r$ci_high)),
-     pch = 19, xlab = "Kalenderwoche", ylab = "Schätzung (Slope)",
-     main = "Schätzung + 95%-CI über die Systemzeit")
-arrows(r$snapshot_week, r$ci_low, r$snapshot_week, r$ci_high,
-       length = 0.04, angle = 90, code = 3)
-abline(h = -0.15, lty = 2)  # die Wahrheit
-```
-
-## 3. Falle 1 — das falsche Modell
-
-Das Treatment `z` hängt an der **Therapeut:in**, nicht an der einzelnen
-Messung. Ein naives Modell, das jede Messung als unabhängig zählt, ist
-sich seiner Sache viel zu sicher. Wir lassen beide Modelle durch
-`r REPS` Welten laufen, in denen es **nichts zu finden gibt** —
-und zählen die Falschalarme:
-
-```{r estimators, warning=FALSE, message=FALSE}
-args <- list(n_therapists = 12, patients_per_therapist = 6,
-             n_sessions = 4, icc = 0.20, tau = 0)
-res <- mc_run(REPS, args,
-              fit_fns = list(naiv = fit_z_naive, lmm = fit_z_satt))
-mc_summary(res, truth = 0)[, c("estimator", "reject_rate", "coverage")]
-```
-
-Das naive Modell "findet" den nicht existierenden Effekt in einem
-großen Teil der Welten; das genestete Modell mit ehrlicher Inferenz
-(Satterthwaite) bleibt nahe am Soll von 5 %.
-
-## 4. Falle 2 — das falsche Prüf-Verhalten
-
-Jetzt halten wir das **gute** Modell fest und variieren nur die
-Gewohnheit: alle 6 Wochen testen und beim ersten "signifikant"
-aufhören (`run_peek()`) — oder ein einziger, vorab festgelegter
-Prüftermin (`run_gate()`).
-
-```{r regimes, warning=FALSE, message=FALSE}
-res <- t(sapply(seq_len(REPS), function(sd) {
-  s <- do.call(sim_stream, c(args, list(seed = sd)))
-  c(peek = run_peek(s, fit_z_satt, every = 6)$hit,
-    gate = run_gate(s, fit_z_satt, at_week = max(s$week))$significant)
-}))
-round(colMeans(res), 2)
-```
-
-**Dieselbe ehrliche Statistik** halluziniert unter Dauer-Peeking ein
-Mehrfaches der erlaubten Falschalarme. Gute Modelle schützen nicht vor
-schlechten Prüf-Gewohnheiten — Governance ist nicht durch Statistik
-ersetzbar.
-
-## 5. Der Ausweg — mehrere Termine mit verteiltem Budget
-
-Ein lebendes System will nicht ein Jahr blind warten. `run_gates()`
-erlaubt mehrere vorab festgelegte Termine und verteilt das
-Irrtums-Budget (Bonferroni: bei k Terminen prüft jeder mit alpha/k):
-
-```{r gates, warning=FALSE, message=FALSE}
-res <- t(sapply(seq_len(REPS), function(sd) {
-  s <- do.call(sim_stream, c(args, list(seed = sd)))
-  c(unkorrigiert = run_gates(s, fit_z_satt, at_weeks = c(25, 40, 55),
-                             correction = "none")$hit,
-    bonferroni   = run_gates(s, fit_z_satt,
-                             at_weeks = c(25, 40, 55))$hit)
-}))
-round(colMeans(res), 2)
-```
-
-Regelmäßig schauen ist erlaubt — wenn das Budget verteilt wird.
-
-## 6. Die Daten lügen auch von selbst — informativer Dropout
-
-Bisher blieben alle Patient:innen brav bis zur letzten Sitzung. Real
-brechen viele ab — und zwar eher die, denen es schlecht geht. Der
-Strom kann das jetzt: `dropout` ist die Basis-Abbruchrate nach jeder
-Sitzung, `dropout_informative` koppelt sie an den aktuellen Score.
-
-```{r dropout}
-s3 <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
-                 n_sessions = 10, dropout = 0.10,
-                 dropout_informative = 1.5, seed = 3)
-n_obs <- tapply(s3$session, s3$patient_id, max)
-start <- tapply(s3$score, s3$patient_id, function(v) v[1])
-cor(start, n_obs)  # schlechter Start -> kuerzer beobachtet
-```
-
-Wer solche Daten naiv auswertet, sieht am Ende vor allem die, denen
-es gut ging — die Therapie wirkt scheinbar besser, als sie ist.
-Solche Verzerrungen messbar zu machen, ist eine der Aufgaben, für
-die dieser Strom gebaut ist.
-
-## 7. Personalisierungs-Geister
-
-Die spannendste Frage der Versorgung ist nicht "wirkt es?", sondern
-"**wem** hilft es?". Der Strom hat dafür ein Personen-Merkmal `x`,
-und der wahre z-Effekt darf davon abhängen (`tau_x`). Hier lassen
-wir ihn **für alle exakt gleich** sein — und fragen beide Modelle,
-ob sie trotzdem "Personalisierung" sehen:
-
-```{r ghosts, warning=FALSE, message=FALSE}
-res <- t(sapply(seq_len(REPS), function(sd) {
-  args_ohne_tau <- args[setdiff(names(args), "tau")]
-  s <- do.call(sim_stream,
-               c(args_ohne_tau, list(tau = 0.5, tau_x = 0, seed = sd)))
-  c(naiv = is_sig(fit_zx_naive(s)),
-    satt = is_sig(suppressWarnings(fit_zx_satt(s))))
-}))
-round(colMeans(res), 2)
-```
-
-Das naive Modell erfindet in einem erheblichen Teil der Welten
-Subgruppen-Unterschiede, die es nicht gibt (`x` ist pro Person
-konstant — jede Sitzung als unabhängige Beobachtung zu zählen,
-gaukelt Vielfaches an Information vor). So entstehen
-"personalisierte Medizin"-Befunde, die sich nie replizieren.
-
-## 8. Wem hilft es? — Effekte pro Person
-
-Die spannendste Frage ist personalisiert. `fit_cate_grf()` schätzt
-mit einem *Causal Forest* für jede Person den eigenen
-Treatment-Effekt (therapeuten-cluster-robust). In einer Welt mit
-echter Personalisierung (`tau_x = 0.5`) trifft er die Wahrheit gut:
-
-```{r cate, warning=FALSE, message=FALSE}
-het <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
-                  n_sessions = 4, tau = 0.5, tau_x = 0.5, seed = 4)
-ct <- fit_cate_grf(het, num_trees = 400, seed = 1)
-plot(ct$x, ct$tau_hat, xlab = "Personen-Merkmal x",
-     ylab = "geschätzter Effekt pro Person",
-     main = "Der Forest findet echte Personalisierung")
-abline(0.5, 0.5, lty = 2)  # Wahrheit: tau + tau_x * x
-```
-
-**Aber Vorsicht:** Auch wo es nichts zu finden gibt, streuen die
-rohen Personen-Schätzungen sichtbar —
-
-```{r cate-trap, warning=FALSE, message=FALSE}
-hom <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
-                  n_sessions = 4, tau = 0.5, tau_x = 0, seed = 4)
-sd(fit_cate_grf(hom, num_trees = 400, seed = 1)$tau_hat)
-```
-
-Wer diese Streuung wörtlich nimmt ("Person A profitiert doppelt so
-stark!"), liest Rauschen als Personalisierung. Streuung allein ist
-kein Beleg.
-
-## 9. Geist oder Substanz — der Kalibrierungstest
-
-Der Beleg braucht einen Test: `fit_het_grf()` prüft, ob die vom
-Forest behauptete Heterogenität aus den Daten *reproduzierbar* ist.
-Er spricht das normale `fit_*`-Interface — läuft also auch hinter
-Gates. Kleine Stichprobe von Null-Welten:
-
-```{r het-test, warning=FALSE, message=FALSE}
-hits <- sapply(seq_len(15), function(sd) {
-  s <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
-                  n_sessions = 4, tau = 0.5, tau_x = 0, seed = sd)
-  is_sig(fit_het_grf(s, num_trees = 300))
-})
-mean(hits)  # Falschalarm-Quote (Soll ~5%)
-```
-
-In größeren Läufen (30 Welten à 450 Personen): 3% Falschalarme bei
-97% Power — der Test trennt Geist von Substanz.
-
-## 10. Batterien testen, bevor sie existieren
-
-Fragebögen lassen sich als Struktur einlesen (`read_items()`, formr-
-Format — **ohne** die urheberrechtlich geschützten Item-Texte) und
-dann simulieren: `sim_items()` erzeugt ordinale Antworten aus dem
-latenten Zustand, `scale_scores()` misst die **emergente**
-Reliabilität. Das Preisschild einer Kürzung wird ausrechenbar:
-
-```{r items, warning=FALSE, message=FALSE}
 s <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
-                n_sessions = 4, seed = 7)
-for (k in c(12, 6, 3)) {
-  it <- data.frame(item = paste0("i", 1:k), scale = "sym",
-                   n_options = 4, reversed = FALSE)
-  sc <- scale_scores(sim_items(s, it, seed = 1))
-  cat(sprintf("%2d Items: alpha=%.2f | r(Wahrheit)=%.2f\n",
-              k, attr(sc, "alpha")[["sym"]], cor(sc$sym, s$score)))
-}
+                n_sessions = 4, z_level = "patient",
+                tau = 0.5, tau_x = 0.5, icc = 0.10, seed = 1)
+head(s)
 ```
 
-**Und die α-Falle:** Ermüdete Durchklicker (`careless`) blähen die
-scheinbare Reliabilität auf, während die echte Messgüte sinkt —
+Every world is fully determined by its seed. Rerunning the call with
+`seed = 1` reproduces this clinic bit for bit, which is why `seed` is a
+required argument everywhere in the package.
 
-```{r alpha-falle, warning=FALSE, message=FALSE}
-it <- data.frame(item = paste0("i", 1:10), scale = "sym",
-                 n_options = 4, reversed = FALSE)
-for (cl in c(0, 0.15)) {
-  sc <- scale_scores(sim_items(s, it, careless = cl, seed = 1))
-  cat(sprintf("Autopilot %.2f: alpha=%.2f | r(Wahrheit)=%.2f\n",
-              cl, attr(sc, "alpha")[["sym"]], cor(sc$sym, s$score)))
-}
+## The founding observation
+
+Analyze the same world twice. The naive regression treats all session
+rows as independent; the mixed model knows that sessions sit inside
+patients and patients sit inside therapists.
+
+```{r}
+fit_z_naive(s)
+fit_z_satt(s)
 ```
 
-Ein hohes Alpha ist ohne Careless-Screening kein Qualitätsbeweis.
-Items können übrigens per `latent`-Spalte auch den **Allianz**-Prozess
-messen (`alliance = TRUE` im Strom) — damit lässt sich eine komplette
-Sitzungs-Batterie (Symptom- + Beziehungs-Items) samt Zeitkosten
-durchspielen, bevor je ein Mensch sie ausfüllt.
+Both estimates are close to each other, but the naive standard error is
+far smaller: the model counts 800 pieces of information where it truly
+has far fewer. In this world the truth is 0.5; check for yourself
+which of the two intervals contains it.
 
-## Wohin das führt
+## From anecdote to error rate
 
-Als Nächstes wachsen hier: ein Plasmode-Modus (echte Kovariaten +
-synthetische Verläufe) und die restliche Kalibrierung (jede Zahl mit
-Quelle: `attr(preset("ambulanz_de"), "sources")`). Der Bayesian
-Causal Forest ist inzwischen als `fit_cate_bcf()` an Bord — samt
-seines dokumentierten blinden Flecks bei Cluster-Treatments. Jede
-Zahl in diesem Dokument ist mit Seeds reproduzierbar.
+One world proves nothing. `mc_run()` repeats the question over many
+seeded worlds; here, worlds in which the treatment does nothing at all,
+assigned at the therapist level. An honest tool should raise a false
+alarm in about five percent of them.
+
+```{r}
+mc <- mc_run(n_reps = 30,
+             sim_args = list(n_therapists = 20, patients_per_therapist = 10,
+                             n_sessions = 4, z_level = "therapist", tau = 0),
+             fit_fns = list(naive = fit_z_naive, satt = fit_z_satt),
+             seed_start = 1)
+mc_summary(mc, truth = 0)
+```
+
+The pattern that motivates the package appears already at 30 worlds:
+the naive analysis raises false alarms at many times its nominal rate,
+while the Satterthwaite mixed model stays near five percent. (For
+publication-grade numbers, run hundreds of worlds; this chunk is kept
+small so the vignette builds quickly.)
+
+## Person-specific effects
+
+The same interface serves estimators of individual treatment effects.
+These calls need the suggested packages grf and stochtree and take
+longer, so they are shown but not run here:
+
+```{r, eval = FALSE}
+g <- fit_cate_grf(s, num_trees = 1000, seed = 1)   # causal forest
+b <- fit_cate_bcf_ml(s, nburn = 500, nsim = 500,   # multilevel BCF
+                     rfx = TRUE, seed = 1)
+head(b$tau_hat)      # one effect estimate per patient
+attr(b, "ate")       # average effect with posterior interval
+```
+
+Because `sim_stream()` also wrote the true individual effects into the
+world, you can correlate `tau_hat` with the truth, count how often the
+per-person intervals cover it, and decide which tool you would trust in
+your own setting.
+
+## Calibrated presets, including your own
+
+A preset is a claim about reality: a named set of `sim_stream()`
+arguments in which every number carries a citation and a status.
+
+```{r}
+p <- preset("ambulanz_de")
+attr(p, "sources")[, c("parameter", "wert", "status")]
+```
+
+You can define presets for your own clinic or country in the same
+form: a named list of `sim_stream()` arguments with a `sources` data
+frame attached. Values you cannot calibrate are labelled open rather
+than silently guessed; sample sizes stay out of presets deliberately,
+because how large your simulated clinic is remains a design choice,
+not a reality claim.
+
+```{r}
+meine_klinik <- list(n_sessions = 12, icc = 0.08, dropout = 0.02)
+attr(meine_klinik, "sources") <- data.frame(
+  parameter = c("n_sessions", "icc", "dropout"),
+  quelle    = c("clinic records", "own MLM estimate", "open"),
+  status    = c("belegt", "belegt", "offen"))
+
+s2 <- do.call(sim_stream, c(meine_klinik,
+        list(n_therapists = 15, patients_per_therapist = 8,
+             tau = 0.3, seed = 2)))
+nrow(s2)
+```
+
+## Where to go from here
+
+`snapshot()` and `replay()` freeze and replay growing data streams, so
+you can compare analysis habits (continuous peeking versus
+preregistered gates, `run_peek()` and `run_gates()`) on identical
+histories. `sim_items()` and `scale_scores()` take the simulation down
+to the questionnaire item level, with reliability as a measured
+attribute. And every function help page documents which part of the
+data-generating equation it touches.
+
+If you test a tool on your own preset and it breaks: that is not a
+failure of the exercise. Better here than in a clinic.
