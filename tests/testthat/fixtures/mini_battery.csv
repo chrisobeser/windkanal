@@ -1,0 +1,7 @@
+explanations,type,name,label,choice1,choice2,choice3,choice4
+Instruktion,note,intro,Bitte beantworten Sie alles,,,,
+,mc_heading,sym_choices,,nie,selten,oft,immer
+SYM_1,mc sym_choices,sym_1,Ich fuehlte mich niedergeschlagen,,,,
+SYM_2 [rev],mc sym_choices,sym_2,Ich war guter Dinge,,,,
+ALL_1,mc_button ja_nein,all_1,Ich fuehlte mich verstanden,,,,
+SYM_3R,mc sym_choices,sym_3R,Ich war zufrieden,,,,

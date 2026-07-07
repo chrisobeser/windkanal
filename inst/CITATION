@@ -1,0 +1,10 @@
+citHeader("To cite windkanal in publications:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "windkanal: Simulation Testbed for Living Clinical Data Systems",
+  author  = person("Christian", "Obeser"),
+  year    = "2026",
+  note    = "R package version 0.1.0",
+  url     = "https://github.com/chrisobeser/windkanal"
+)

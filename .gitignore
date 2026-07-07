@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+*.tar.gz
+vignettes/*.html
+*_trees.*.txt
+experiments/mc_cate_quality_checkpoints/
+experiments/mc_confounding_checkpoints/
+experiments/*_log.txt
+paper/*.docx
+paper/~$*

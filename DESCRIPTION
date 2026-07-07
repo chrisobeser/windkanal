@@ -1,0 +1,37 @@
+Package: windkanal
+Title: Simulation Testbed for Living Clinical Data Systems
+Version: 0.1.0
+Authors@R:
+    person("Christian", "Obeser", email = "gersari99@gmail.com",
+           role = c("aut", "cre"))
+Description: A wind tunnel for living clinical data systems: simulates
+    growing routine-care data streams (session-wise outcomes, patients
+    nested in therapists, staggered patient entry) so that estimators
+    (e.g. heterogeneous treatment effect methods) and analysis
+    governance protocols (continuous peeking vs. release gates) can be
+    stress-tested against known ground truth before touching real
+    clinical data. Settings are configurable; calibrated presets and a
+    plasmode mode are planned.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
+Imports:
+    stats
+Suggests:
+    bcf,
+    stochtree,
+    grf,
+    knitr,
+    lme4,
+    lmerTest,
+    model4you,
+    ranger,
+    readxl,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    xgboost
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
