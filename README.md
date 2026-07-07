@@ -158,6 +158,31 @@ validated against the package. Validation studies built on windkanal
 are in preparation; the package itself is stable enough for
 methodological experiments and teaching.
 
+## Roadmap
+
+Planned, in rough order. Suggestions and use cases are welcome via
+the issue tracker.
+
+- [ ] **English vignette** walking through a complete
+      simulate-estimate-judge cycle
+- [ ] **More estimator wrappers**: Bayesian mixed models (brms) and
+      further multilevel BART implementations, behind the same
+      uniform interface
+- [ ] **Plasmode mode**: build worlds from real covariate tables and
+      real cluster structures while keeping the injected truth known
+- [ ] **Continuous treatment**: dose as a treatment axis, for
+      questions where amount matters more than assignment
+- [ ] **Richer measurement layer**: per-item loadings and
+      difficulties, additional careless-responding styles, item-level
+      missingness with prorating
+- [ ] **Bounded and skewed outcomes**: floor and ceiling effects for
+      questionnaire-realistic score distributions
+- [ ] **Community presets**: calibrated settings for other services
+      and countries, contributed with mandatory sources
+- [ ] **Shiny design explorer**: interactive what-if for clustered
+      longitudinal designs
+- [ ] **CRAN submission** once the interfaces have settled
+
 ## License
 
 MIT. Contributions are welcome, see `CONTRIBUTING.md`.
