@@ -163,8 +163,6 @@ methodological experiments and teaching.
 Planned, in rough order. Suggestions and use cases are welcome via
 the issue tracker.
 
-- [ ] **English vignette** walking through a complete
-      simulate-estimate-judge cycle
 - [ ] **More estimator wrappers**: Bayesian mixed models (brms) and
       further multilevel BART implementations, behind the same
       uniform interface
