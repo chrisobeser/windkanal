@@ -1,3 +1,18 @@
+# windkanal (development version)
+
+* New `cate_metrics()`: one shared metric set for CATE estimates against
+  known truth (ranking `r`, magnitude `pehe`, bias, dispersion, person-level
+  interval coverage, honest error flag). PEHE is always reported: `r` alone
+  is blind to amplitude errors (any affine estimator reaches r = 1 under a
+  linear true effect).
+
+* New `fit_z_brms()`: Bayesian mixed-model ATE estimator (brms/Stan),
+  the Bayesian counterpart to `fit_z_satt()` behind the same interface,
+  with a per-session compile cache. Requires the suggested `brms`
+  package.
+
+* Added `CITATION.cff` (GitHub citation support).
+
 # windkanal 0.1.0 (2026-07-06)
 
 First feature-complete pre-release.

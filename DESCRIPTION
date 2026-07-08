@@ -1,6 +1,6 @@
 Package: windkanal
 Title: Simulation Testbed for Living Clinical Data Systems
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R:
     person("Christian", "Obeser", email = "gersari99@gmail.com",
            role = c("aut", "cre"))
@@ -21,6 +21,7 @@ Imports:
     stats
 Suggests:
     bcf,
+    brms,
     stochtree,
     grf,
     knitr,

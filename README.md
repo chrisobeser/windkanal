@@ -48,13 +48,16 @@ with reliability as a measured attribute rather than an assumption.
 
 ## The estimator zoo
 
-Twelve estimator classes run behind one uniform interface:
+Thirteen estimator classes run behind one uniform interface:
 
 - **Naive OLS** (`fit_z_naive`) — treats every session as
   independent; the field's historical default and the built-in
   negative anchor
 - **Mixed model with Satterthwaite inference** (`fit_z_satt`) — the
   classical correct tool for average effects under nesting
+- **Bayesian mixed model** (`fit_z_brms`; brms/Stan) — the Bayesian
+  counterpart to the Satterthwaite model: same nesting structure,
+  posterior mean and credible interval, per-session compile cache
 - **Interaction variants** (`fit_zx_naive`, `fit_zx_satt`) — target
   the moderation coefficient directly
 - **PAI, per-arm regressions** (`fit_cate_pai`) — the classic
@@ -82,6 +85,19 @@ Average-effect inference for the learners uses a therapist-cluster
 bootstrap; performance measures include dual coverage definitions,
 rejection indicators that honor degrees-of-freedom corrections,
 ranking correlation, and PEHE.
+
+Judging an estimate against known truth is one call:
+
+``` r
+cate_metrics(fit$tau_hat, truth, fit$tau_lo, fit$tau_hi)
+#>     n     r  pehe   bias sd_tau_hat covered error
+#> 1 200 0.904 0.101 0.0125      0.234       1 FALSE
+```
+
+`r` measures ranking only and is blind to amplitude errors (any
+affine estimator reaches r = 1 under a linear true effect); `pehe`
+is the magnitude corrective. The function always reports both, so
+no experiment can silently drop one.
 
 ## Calibrated presets, including your own
 
@@ -168,9 +184,12 @@ production use.
 Planned, in rough order. Suggestions and use cases are welcome via
 the issue tracker.
 
-- [ ] **More estimator wrappers**: Bayesian mixed models (brms) and
-      further multilevel BART implementations, behind the same
-      uniform interface
+- [x] **Bayesian mixed model wrapper** (`fit_z_brms()`): the Bayesian
+      counterpart to the Satterthwaite mixed model, behind the same
+      uniform interface (shipped in the development version)
+- [ ] **More estimator wrappers**: further multilevel BART
+      implementations (e.g. stan4bart), behind the same uniform
+      interface
 - [ ] **Plasmode mode**: build worlds from real covariate tables and
       real cluster structures while keeping the injected truth known
 - [ ] **Continuous treatment**: dose as a treatment axis, for
