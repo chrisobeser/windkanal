@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use windkanal in your research, please cite it as below."
+type: software
+title: "windkanal: Simulation Testbed for Living Clinical Data Systems"
+authors:
+  - family-names: "Obeser"
+    given-names: "Christian"
+version: 0.1.0
+date-released: "2026-07-06"
+license: MIT
+repository-code: "https://github.com/chrisobeser/windkanal"
+url: "https://github.com/chrisobeser/windkanal"
+abstract: >-
+  A wind tunnel for living clinical data systems: simulates growing
+  routine-care data streams (session-wise outcomes, patients nested in
+  therapists, staggered patient entry) so that estimators (e.g.
+  heterogeneous treatment effect methods) and analysis governance
+  protocols can be stress-tested against known ground truth before
+  touching real clinical data.
+keywords:
+  - psychotherapy-research
+  - monte-carlo-simulation
+  - heterogeneous-treatment-effects
+  - multilevel-models
+  - R-package
