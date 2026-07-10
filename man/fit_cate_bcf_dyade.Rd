@@ -39,6 +39,6 @@ Therapeuten-Random-Intercepts bleiben aktiv (die Nesting-Reparatur).
 }
 \details{
 Einordnung: v1a der Entwicklungslinie I30 (dyadischer CATE);
-\link{exploratory}, Erwartungen im Experiment-Skript
+exploratorisch (kein Checkpoint-Protokoll), Erwartungen im Experiment-Skript
 \code{experiments/dyade/mc_dyade_v1.R}.
 }

@@ -21,6 +21,7 @@ Imports:
     stats
 Suggests:
     stan4bart,
+    dbarts,
     gpboost,
     LongituRF,
     bcf,

@@ -10,7 +10,7 @@
 #' Therapeuten-Random-Intercepts bleiben aktiv (die Nesting-Reparatur).
 #'
 #' Einordnung: v1a der Entwicklungslinie I30 (dyadischer CATE);
-#' [exploratory], Erwartungen im Experiment-Skript
+#' exploratorisch (kein Checkpoint-Protokoll), Erwartungen im Experiment-Skript
 #' `experiments/dyade/mc_dyade_v1.R`.
 #'
 #' @param stream Datenstrom aus [sim_stream()]; muss mit
@@ -33,6 +33,7 @@ fit_cate_bcf_dyade <- function(stream, nburn = 500, nsim = 500,
     stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
   }
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_bcf_dyade()")
   if (is.null(p$therapist_c)) {
     stop("Dyadischer BCF braucht `therapist_c` im Stream ",
          "(tau_c/tau_xc-Design).", call. = FALSE)
