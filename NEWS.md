@@ -1,3 +1,19 @@
+# windkanal 0.1.0 (2026-07-10)
+
+- Four new estimator wrappers behind the same uniform interface:
+  multilevel BART (`fit_cate_stan4bart`; stan4bart), GP boosting
+  (`fit_cate_gpboost`; GPBoost), mixed-effects random forest
+  (`fit_cate_merf`; LongituRF), and a dyadic BCF variant with an
+  explicit patient-by-therapist product feature (`fit_cate_bcf_dyade`).
+- `plasmode_world()`: build worlds from a real covariate table and a
+  real cluster structure while keeping the injected treatment effect
+  known (generate-treatment framework; ships as recipe code, no data).
+- `inst/CITATION` added; `citation("windkanal")` now works.
+- First full validation program complete: sixteen estimators across
+  fifteen pre-specified cells, 62,100 estimator-world fits, all
+  expectations version-controlled before execution. Preprint in
+  preparation.
+
 # windkanal (development version)
 
 * New `cate_metrics()`: one shared metric set for CATE estimates against

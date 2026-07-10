@@ -3,8 +3,10 @@
 #' Computes the fixed metric set for judging individual-effect
 #' estimates in one call: ranking quality, magnitude error, bias,
 #' dispersion, person-level interval coverage, and an honest error
-#' flag. One shared function instead of per-script metric code, so
-#' that no experiment can silently drop a metric.
+#' flag. Exists as one shared function so that no experiment script
+#' can forget a metric again (the plasmode v1 run recorded no PEHE,
+#' which left PAI's trivial r = 1.000 in a linear world without its
+#' corrective).
 #'
 #' Interpretation: `r` measures *ranking* only -- it is scale-free and
 #' blind to amplitude errors. In worlds with a linear true effect any

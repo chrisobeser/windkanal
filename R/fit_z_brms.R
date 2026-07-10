@@ -1,23 +1,21 @@
-#' ATE estimation with a Bayesian mixed model (brms)
+#' ATE-Schaetzung mit Bayes-LMM (brms) -- Pruefling 13
 #'
-#' Bayesian counterpart to [fit_z_satt()]: the same mixed model
-#' `score ~ z + (1 | therapist_id) + (1 | patient_id)`, estimated with
-#' brms/Stan. Reports the posterior mean, posterior SD, and the
-#' central 95% credible interval of the treatment coefficient.
+#' Bayesianisches Gegenstueck zu [fit_z_satt()]: dasselbe gemischte
+#' Modell `score ~ z + (1 | therapist_id) + (1 | patient_id)`, aber
+#' mit brms/Stan geschaetzt; berichtet werden Posterior-Mittel, -SD
+#' und das zentrale 95-%-Kredibilitaetsintervall des z-Koeffizienten.
 #'
-#' Specification: brms default priors (flat prior on the treatment
-#' coefficient, `student_t(3, ...)` on intercept and SD parameters),
-#' 2 chains, 1000 warmup + 1000 draws by default. The Stan model is
-#' compiled once per session and refilled per dataset via `update()`
-#' (deterministic given `seed`). Note that with the default draw
-#' count Stan may warn about low effective sample sizes; increase
-#' `draws` for final analyses if those warnings matter for your use.
+#' **Fixierte Spezifikation (vor Erwartungs-Lauf, 2026-07-07):**
+#' brms-Default-Priors (flacher Prior auf b_z, student_t(3, ...) auf
+#' Intercept und SD-Parameter), 2 Chains, 1000 Warmup + 1000 Draws.
+#' Compile-Cache: Das Stan-Modell wird einmal kompiliert und pro Welt
+#' via `update()` neu befuellt (Determinismus ueber `seed`).
 #'
-#' @param stream Data stream from [sim_stream()] (or a snapshot).
-#' @param chains,warmup,draws MCMC settings (defaults 2/1000/1000).
-#' @param seed Random seed (mandatory).
-#' @return Named vector `estimate`, `se` (posterior SD), `lo`, `hi`
-#'   (2.5/97.5% quantiles).
+#' @param stream Datenstrom aus [sim_stream()] (oder Snapshot).
+#' @param chains,warmup,draws MCMC-Einstellungen (Default 2/1000/1000).
+#' @param seed Zufalls-Seed (Pflicht).
+#' @return Benannter Vektor `estimate`, `se` (Posterior-SD), `lo`,
+#'   `hi` (2.5-/97.5-%-Quantile) -- kompatibel mit `cover()`.
 #' @export
 fit_z_brms <- local({
   cache <- new.env(parent = emptyenv())

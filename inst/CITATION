@@ -1,10 +1,12 @@
-citHeader("To cite windkanal in publications:")
+citHeader("To cite windkanal in publications use:")
 
 bibentry(
   bibtype = "Manual",
-  title   = "windkanal: Simulation Testbed for Living Clinical Data Systems",
+  title   = "windkanal: A simulation testbed for treatment-effect estimators under therapist nesting",
   author  = person("Christian", "Obeser"),
   year    = "2026",
   note    = "R package version 0.1.0",
   url     = "https://github.com/chrisobeser/windkanal"
 )
+
+citFooter("A validation preprint (sixteen estimators under therapist nesting) is in preparation; check the repository README for the current reference.")

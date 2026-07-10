@@ -2,33 +2,31 @@
 % Please edit documentation in R/fit_z_brms.R
 \name{fit_z_brms}
 \alias{fit_z_brms}
-\title{ATE estimation with a Bayesian mixed model (brms)}
+\title{ATE-Schaetzung mit Bayes-LMM (brms) -- Pruefling 13}
 \usage{
 fit_z_brms(stream, chains = 2, warmup = 1000, draws = 1000, seed)
 }
 \arguments{
-\item{stream}{Data stream from \code{\link[=sim_stream]{sim_stream()}} (or a snapshot).}
+\item{stream}{Datenstrom aus \code{\link[=sim_stream]{sim_stream()}} (oder Snapshot).}
 
-\item{chains, warmup, draws}{MCMC settings (defaults 2/1000/1000).}
+\item{chains, warmup, draws}{MCMC-Einstellungen (Default 2/1000/1000).}
 
-\item{seed}{Random seed (mandatory).}
+\item{seed}{Zufalls-Seed (Pflicht).}
 }
 \value{
-Named vector \code{estimate}, \code{se} (posterior SD), \code{lo}, \code{hi}
-(2.5/97.5\% quantiles).
+Benannter Vektor \code{estimate}, \code{se} (Posterior-SD), \code{lo},
+\code{hi} (2.5-/97.5-\%-Quantile) -- kompatibel mit \code{cover()}.
 }
 \description{
-Bayesian counterpart to \code{\link[=fit_z_satt]{fit_z_satt()}}: the same mixed model
-\code{score ~ z + (1 | therapist_id) + (1 | patient_id)}, estimated with
-brms/Stan. Reports the posterior mean, posterior SD, and the
-central 95\% credible interval of the treatment coefficient.
+Bayesianisches Gegenstueck zu \code{\link[=fit_z_satt]{fit_z_satt()}}: dasselbe gemischte
+Modell \code{score ~ z + (1 | therapist_id) + (1 | patient_id)}, aber
+mit brms/Stan geschaetzt; berichtet werden Posterior-Mittel, -SD
+und das zentrale 95-\%-Kredibilitaetsintervall des z-Koeffizienten.
 }
 \details{
-Specification: brms default priors (flat prior on the treatment
-coefficient, \code{student_t(3, ...)} on intercept and SD parameters),
-2 chains, 1000 warmup + 1000 draws by default. The Stan model is
-compiled once per session and refilled per dataset via \code{update()}
-(deterministic given \code{seed}). Note that with the default draw
-count Stan may warn about low effective sample sizes; increase
-\code{draws} for final analyses if those warnings matter for your use.
+\strong{Fixierte Spezifikation (vor Erwartungs-Lauf, 2026-07-07):}
+brms-Default-Priors (flacher Prior auf b_z, student_t(3, ...) auf
+Intercept und SD-Parameter), 2 Chains, 1000 Warmup + 1000 Draws.
+Compile-Cache: Das Stan-Modell wird einmal kompiliert und pro Welt
+via \code{update()} neu befuellt (Determinismus ueber \code{seed}).
 }

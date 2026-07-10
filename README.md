@@ -48,7 +48,7 @@ with reliability as a measured attribute rather than an assumption.
 
 ## The estimator zoo
 
-Thirteen estimator classes run behind one uniform interface:
+Seventeen estimator wrappers run behind one uniform interface:
 
 - **Naive OLS** (`fit_z_naive`) — treats every session as
   independent; the field's historical default and the built-in
@@ -80,6 +80,16 @@ Thirteen estimator classes run behind one uniform interface:
   bcf and stochtree) — with and without therapist random
   intercepts, so the effect of modeling the nesting is itself
   testable
+- **Multilevel BART** (`fit_cate_stan4bart`; stan4bart) — one BART
+  response surface plus Stan-sampled therapist random intercepts;
+  an independently developed second multilevel implementation
+- **GP boosting** (`fit_cate_gpboost`; GPBoost) — tree boosting
+  with jointly estimated grouped random effects
+- **Mixed-effects random forest** (`fit_cate_merf`; LongituRF) —
+  EM-style alternation between forest fit and BLUP update
+- **Dyadic BCF** (`fit_cate_bcf_dyade`) — multilevel BCF with an
+  explicit patient-by-therapist product feature, for
+  matching-effect experiments
 
 Average-effect inference for the learners uses a therapist-cluster
 bootstrap; performance measures include dual coverage definitions,
@@ -174,8 +184,11 @@ package is currently in its testing phase. That said, development is
 test-driven from the start: more than 220 unit tests, continuous
 integration on GitHub Actions, `R CMD check` clean, and the
 data-generating equation has been independently reimplemented from its
-written specification and validated against the package. Validation
-studies built on windkanal are in preparation. Suitable today for
+written specification and validated against the package. The first validation study is
+complete — sixteen estimators across fifteen pre-specified cells,
+62,100 estimator-world fits, every expectation version-controlled
+before execution — and its preprint is in preparation. Suitable
+today for
 methodological experiments and teaching; not yet for unsupervised
 production use.
 
@@ -186,12 +199,11 @@ the issue tracker.
 
 - [x] **Bayesian mixed model wrapper** (`fit_z_brms()`): the Bayesian
       counterpart to the Satterthwaite mixed model, behind the same
-      uniform interface (shipped in the development version)
-- [ ] **More estimator wrappers**: further multilevel BART
-      implementations (e.g. stan4bart), behind the same uniform
-      interface
-- [ ] **Plasmode mode**: build worlds from real covariate tables and
-      real cluster structures while keeping the injected truth known
+      uniform interface (shipped)
+- [x] **More estimator wrappers** (shipped: stan4bart, GPBoost,
+      MERF — see the estimator zoo)
+- [x] **Plasmode mode** (shipped: `plasmode_world()` — real
+      covariate tables and cluster structures, injected truth known)
 - [ ] **Continuous treatment**: dose as a treatment axis, for
       questions where amount matters more than assignment
 - [ ] **Questionnaire layer, next stage**: per-item loadings and
@@ -206,6 +218,16 @@ the issue tracker.
 - [ ] **Shiny design explorer**: interactive what-if for clustered
       longitudinal designs
 - [ ] **CRAN submission** once the interfaces have settled
+
+## Citation
+
+``` r
+citation("windkanal")
+```
+
+Obeser, C. (2026). *windkanal: A simulation testbed for
+treatment-effect estimators under therapist nesting* (R package
+version 0.1.0). https://github.com/chrisobeser/windkanal
 
 ## License
 
