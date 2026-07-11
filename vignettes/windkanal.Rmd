@@ -132,6 +132,28 @@ s2 <- do.call(sim_stream, c(meine_klinik,
 nrow(s2)
 ```
 
+## When amount matters more than assignment
+
+Some questions are not about whether a patient received a treatment
+but about how much of it: session dose, alliance exposure, degree of
+patient-therapist matching. For these, `z_type = "dose"` replaces the
+binary contrast with a continuous exposure `z`, drawn uniform on
+[0, 1] at the chosen `z_level`. All effect terms then act per unit
+dose, so `tau` is the effect of moving from dose 0 to dose 1.
+
+```{r}
+d <- sim_stream(n_therapists = 40, patients_per_therapist = 8,
+                n_sessions = 4, z_type = "dose", z_level = "patient",
+                tau = 0.5, seed = 20)
+range(d$z)
+fit_z_satt(d)   # the mixed model carries the per-unit dose effect
+```
+
+The arm-based estimators (`fit_cate_*`, `fit_het_grf()`) refuse dose
+worlds with an informative error rather than silently reinterpreting
+a continuous `z`; continuous-treatment effect estimators are on the
+roadmap.
+
 ## Where to go from here
 
 `snapshot()` and `replay()` freeze and replay growing data streams, so

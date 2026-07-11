@@ -35,6 +35,19 @@
 #'   Howard tradition / dose-response research). The trajectory term
 #'   is `slope * (session - 1)` or `slope * log(session)`.
 #' @param p_treated Share with treatment `z = 1`.
+#' @param z_type Type of treatment: `"binary"` (default; `z` in
+#'   0/1, the classical two-arm contrast) or `"dose"` (continuous
+#'   exposure `z` drawn uniform on `[0, 1]` at the chosen
+#'   `z_level`). In dose mode the effect terms `tau`, `tau_x`,
+#'   `tau_c`, `tau_xc` act per unit dose: the score contribution is
+#'   `[tau + tau_x h(x) + ...] * z` with continuous `z`, so `tau` is
+#'   the effect of moving from dose 0 to dose 1. Dose worlds model
+#'   questions where amount matters more than assignment (session
+#'   dose, alliance exposure, degree of patient-therapist matching).
+#'   `p_treated` is ignored (with a warning) and `confounding` is
+#'   not implemented in dose mode. Note that the arm-based and
+#'   propensity-based CATE wrappers require binary treatment and
+#'   refuse dose worlds with an informative error.
 #' @param z_level Level of treatment assignment: `"therapist"`
 #'   (default -- z constant per therapist, e.g. a feedback system or
 #'   training; the hard case for naive methods) or `"patient"` -- z
@@ -147,6 +160,7 @@ sim_stream <- function(n_therapists = 10,
                        shape = c("linear", "loglinear"),
                        p_treated = 0.5,
                        z_level = c("therapist", "patient"),
+                       z_type = c("binary", "dose"),
                        tau = 0,
                        tau_x = 0,
                        tau_x_form = c("linear", "step", "quadratic"),
@@ -172,7 +186,18 @@ sim_stream <- function(n_therapists = 10,
   tau_shape <- match.arg(tau_shape)
   tau_x_form <- match.arg(tau_x_form)
   z_level <- match.arg(z_level)
+  z_type <- match.arg(z_type)
   stopifnot(n_noise >= 0)
+  if (z_type == "dose") {
+    if (confounding != 0) {
+      stop("confounding != 0 is not implemented for z_type = \"dose\".",
+           call. = FALSE)
+    }
+    if (p_treated != 0.5) {
+      warning("p_treated is ignored when z_type = \"dose\" ",
+              "(dose is drawn uniform on [0, 1]).", call. = FALSE)
+    }
+  }
   if (missing(seed)) {
     stop("`seed` is mandatory: a wind-tunnel run must be reproducible.",
          call. = FALSE)
@@ -218,9 +243,15 @@ sim_stream <- function(n_therapists = 10,
 
   # treatment: cluster level (default) or dyad/patient level
   if (z_level == "therapist") {
-    n_treated <- round(p_treated * n_therapists)
-    z <- integer(n_therapists)
-    z[sample.int(n_therapists, n_treated)] <- 1L
+    if (z_type == "binary") {
+      n_treated <- round(p_treated * n_therapists)
+      z <- integer(n_therapists)
+      z[sample.int(n_therapists, n_treated)] <- 1L
+    } else {
+      # dose mode: continuous exposure per therapist, uniform on [0, 1]
+      # (new branch; binary draw order stays bit-identical)
+      z <- stats::runif(n_therapists)
+    }
   }
 
   therapist_id <- rep(seq_len(n_therapists),
@@ -231,7 +262,12 @@ sim_stream <- function(n_therapists = 10,
   # always -> bit identity); with confounding != 0 only AFTER x,
   # because assignment depends on x
   if (z_level == "patient" && confounding == 0) {
-    z_pat <- stats::rbinom(n_patients, 1L, p_treated)
+    z_pat <- if (z_type == "binary") {
+      stats::rbinom(n_patients, 1L, p_treated)
+    } else {
+      # dose mode: continuous exposure per patient, uniform on [0, 1]
+      stats::runif(n_patients)
+    }
   }
   baseline   <- rnorm(n_patients, mean = 0, sd = 1)
   # slope decomposition: patient share + (optional) therapist share;

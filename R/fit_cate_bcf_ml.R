@@ -41,6 +41,7 @@ fit_cate_bcf_ml <- function(stream, nburn = 500, nsim = 500,
     stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
   }
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_bcf_ml()")
   x <- as.data.frame(cate_features(p))
   ph <- if (pihat == "glm") {
     stats::glm(z ~ x, family = stats::binomial, data = p)$fitted.values

@@ -204,8 +204,10 @@ the issue tracker.
       MERF — see the estimator zoo)
 - [x] **Plasmode mode** (shipped: `plasmode_world()` — real
       covariate tables and cluster structures, injected truth known)
-- [ ] **Continuous treatment**: dose as a treatment axis, for
-      questions where amount matters more than assignment
+- [x] **Continuous treatment** (shipped in v0.2.0:
+      `z_type = "dose"` — dose as a treatment axis, for questions
+      where amount matters more than assignment; arm-based
+      estimators refuse dose worlds with an informative error)
 - [ ] **Questionnaire layer, next stage**: per-item loadings and
       IRT-style difficulties, additional careless-responding styles
       beyond straightlining, item-level missingness with prorating,
