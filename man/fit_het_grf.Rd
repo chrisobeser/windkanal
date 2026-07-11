@@ -31,4 +31,9 @@ Standard-\verb{fit_*}-Interface (\code{estimate}, \code{se}, \code{p}) -- damit 
 der Test direkt in \code{\link[=mc_run]{mc_run()}}, \code{\link[=run_peek]{run_peek()}} und \code{\link[=run_gates]{run_gates()}}:
 Personalisierungs-Behauptungen werden governance-pruefbar wie
 Haupteffekte.
+
+Verlangt binaeres Treatment: \code{grf::causal_forest} akzeptiert zwar
+stetiges W (partieller Effekt), aber der Kalibrierungstest ist im
+Paket nur fuer den Zwei-Arm-Kontrast validiert -- Dosis-Welten
+(\code{z_type = "dose"}) werden mit informativem Fehler abgewiesen.
 }

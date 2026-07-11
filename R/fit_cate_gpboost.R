@@ -33,6 +33,7 @@ fit_cate_gpboost <- function(stream, nrounds = 300, learning_rate = 0.1,
   if (missing(seed)) stop("`seed` is mandatory.", call. = FALSE)
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_gpboost()")
   tau_fun <- function(d) {
     X <- cbind(cate_features(d), z = d$z)
     gp <- gpboost::GPModel(group_data = d$therapist_id,

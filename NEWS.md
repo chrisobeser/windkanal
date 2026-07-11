@@ -1,3 +1,25 @@
+# windkanal 0.2.0 (2026-07-11)
+
+- Continuous treatment axis: `sim_stream(z_type = "dose")` draws a
+  continuous exposure `z` uniform on [0, 1] at the chosen `z_level`
+  (therapist or patient/dyad). All effect terms (`tau`, `tau_x`,
+  `tau_c`, `tau_xc`) act per unit dose, so `tau` is the effect of
+  moving from dose 0 to dose 1. Dose worlds model questions where
+  amount matters more than assignment: session dose, alliance
+  exposure, degree of patient-therapist matching. Binary worlds
+  (`z_type = "binary"`, the default) remain bit-identical to
+  earlier versions.
+- Guard rails: the arm- and propensity-based estimator wrappers
+  (all `fit_cate_*` functions and `fit_het_grf()`) refuse dose
+  worlds with an informative error instead of silently
+  reinterpreting a continuous `z`. The classical mixed-model
+  wrappers (`fit_z_lmm()`, `fit_z_satt()`, `fit_zx_*()`) carry the
+  per-unit dose effect; continuous-treatment CATE estimators
+  remain on the roadmap.
+- In dose mode `p_treated` is ignored (with a warning) and
+  `confounding` is not implemented (error); both are documented in
+  `?sim_stream`.
+
 # windkanal 0.1.0 (2026-07-10)
 
 - Four new estimator wrappers behind the same uniform interface:
@@ -9,12 +31,9 @@
   real cluster structure while keeping the injected treatment effect
   known (generate-treatment framework; ships as recipe code, no data).
 - `inst/CITATION` added; `citation("windkanal")` now works.
-- First full validation program complete: sixteen estimators across
-  fifteen pre-specified cells, 62,100 estimator-world fits, all
-  expectations version-controlled before execution. Preprint in
-  preparation.
 
-# windkanal (development version)
+Shipped in the same release (previously listed under "development
+version"):
 
 * New `cate_metrics()`: one shared metric set for CATE estimates against
   known truth (ranking `r`, magnitude `pehe`, bias, dispersion, person-level
@@ -28,6 +47,10 @@
   package.
 
 * Added `CITATION.cff` (GitHub citation support).
+- First full validation program complete: sixteen estimators across
+  fifteen pre-specified cells, 62,100 estimator-world fits, all
+  expectations version-controlled before execution. Preprint in
+  preparation.
 
 # windkanal 0.1.0 (2026-07-06)
 

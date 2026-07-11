@@ -1,3 +1,13 @@
+# internal: dose worlds must never silently enter binary-only estimators
+z_binaer_pruefen <- function(p, fn) {
+  if (!all(p$z %in% c(0, 1))) {
+    stop(fn, " requires binary treatment (z in {0, 1}); dose worlds ",
+         "(z_type = \"dose\") are not supported by this estimator.",
+         call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' Condense the data stream to the person level
 #'
 #' Many questions live at the person level, not the session level.
@@ -109,6 +119,7 @@ fit_cate_grf <- function(stream, num_trees = 1000, honesty = TRUE,
          call. = FALSE)
   }
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_grf()")
   X <- cate_features(p)
   args <- list(X = X, Y = p$score_mean, W = p$z,
                num.trees = num_trees, honesty = honesty, seed = seed)

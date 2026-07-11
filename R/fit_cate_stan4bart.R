@@ -38,6 +38,7 @@ fit_cate_stan4bart <- function(stream, chains = 2, warmup = 500,
     stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
   }
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_stan4bart()")
   d <- as.data.frame(cate_features(p))
   feats <- colnames(d)
   d$z <- p$z

@@ -16,6 +16,7 @@ sim_stream(
   shape = c("linear", "loglinear"),
   p_treated = 0.5,
   z_level = c("therapist", "patient"),
+  z_type = c("binary", "dose"),
   tau = 0,
   tau_x = 0,
   tau_x_form = c("linear", "step", "quadratic"),
@@ -75,6 +76,20 @@ training; the hard case for naive methods) or \code{"patient"} -- z
 varies \strong{within} therapists (dyad level, e.g. \strong{matching}:
 this pairing fits / does not fit). Outcomes keep clustering in
 therapists either way.}
+
+\item{z_type}{Type of treatment: \code{"binary"} (default; \code{z} in
+0/1, the classical two-arm contrast) or \code{"dose"} (continuous
+exposure \code{z} drawn uniform on \verb{[0, 1]} at the chosen
+\code{z_level}). In dose mode the effect terms \code{tau}, \code{tau_x},
+\code{tau_c}, \code{tau_xc} act per unit dose: the score contribution is
+\verb{[tau + tau_x h(x) + ...] * z} with continuous \code{z}, so \code{tau} is
+the effect of moving from dose 0 to dose 1. Dose worlds model
+questions where amount matters more than assignment (session
+dose, alliance exposure, degree of patient-therapist matching).
+\code{p_treated} is ignored (with a warning) and \code{confounding} is
+not implemented in dose mode. Note that the arm-based and
+propensity-based CATE wrappers require binary treatment and
+refuse dose worlds with an informative error.}
 
 \item{tau}{Mean treatment effect of \code{z} on the score level.}
 

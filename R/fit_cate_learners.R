@@ -62,6 +62,7 @@ fit_cate_tlearner <- function(stream, num_trees = 500, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_tlearner()")
   feats <- colnames(cate_features(p))
   tau_fun <- function(d) {
     f <- stats::as.formula(paste("score_mean ~",
@@ -111,6 +112,7 @@ fit_cate_sboost <- function(stream, nrounds = 300, max_depth = 3,
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_sboost()")
   tau_fun <- function(d) {
     X <- cbind(cate_features(d), z = d$z)
     m <- suppressWarnings(xgboost::xgboost(
@@ -152,6 +154,7 @@ fit_cate_xlearner <- function(stream, num_trees = 500, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_xlearner()")
   feats <- colnames(cate_features(p))
   f1 <- stats::as.formula(paste("score_mean ~",
                                 paste(feats, collapse = " + ")))
@@ -204,6 +207,7 @@ fit_cate_drlearner <- function(stream, num_trees = 500, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_drlearner()")
   feats <- colnames(cate_features(p))
   f1 <- stats::as.formula(paste("score_mean ~",
                                 paste(feats, collapse = " + ")))
@@ -258,6 +262,7 @@ fit_cate_rlearner <- function(stream, num_trees = 500, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_rlearner()")
   feats <- colnames(cate_features(p))
   f1 <- stats::as.formula(paste("score_mean ~",
                                 paste(feats, collapse = " + ")))
@@ -300,6 +305,7 @@ fit_cate_pai <- function(stream, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_pai()")
   feats <- colnames(cate_features(p))
   f <- stats::as.formula(paste("score_mean ~",
                                paste(feats, collapse = " + ")))
@@ -341,6 +347,7 @@ fit_cate_mob <- function(stream, num_trees = 200, B = 200, seed) {
   }
   set.seed(seed)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_mob()")
   feats <- colnames(cate_features(p))
   tau_fun <- function(d) {
     dd <- d[, c("score_mean", "z", feats)]

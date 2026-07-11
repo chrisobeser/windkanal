@@ -12,6 +12,11 @@
 #' Personalisierungs-Behauptungen werden governance-pruefbar wie
 #' Haupteffekte.
 #'
+#' Verlangt binaeres Treatment: `grf::causal_forest` akzeptiert zwar
+#' stetiges W (partieller Effekt), aber der Kalibrierungstest ist im
+#' Paket nur fuer den Zwei-Arm-Kontrast validiert -- Dosis-Welten
+#' (`z_type = "dose"`) werden mit informativem Fehler abgewiesen.
+#'
 #' @param snap Snapshot/Datenstrom aus [sim_stream()].
 #' @param num_trees Baeume (Default 500 -- MC-tauglich schnell).
 #' @param forest_seed Interner Forest-Seed (Default 1, deterministisch;
@@ -24,6 +29,7 @@ fit_het_grf <- function(snap, num_trees = 500, forest_seed = 1L) {
     stop("fit_het_grf() braucht das Paket 'grf'.", call. = FALSE)
   }
   p <- patients(snap)
+  z_binaer_pruefen(p, "fit_het_grf()")
   cf <- grf::causal_forest(
     X = matrix(p$x, ncol = 1), Y = p$score_mean, W = p$z,
     clusters = p$therapist_id,

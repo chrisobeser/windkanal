@@ -47,6 +47,7 @@ fit_cate_bcf <- function(stream, nburn = 500, nsim = 500,
     unlink(setdiff(nachher, vorher))
   }, add = TRUE)
   p <- patients(stream)
+  z_binaer_pruefen(p, "fit_cate_bcf()")
   x <- cate_features(p)
   pihat <- if (pihat == "glm") {
     stats::glm(z ~ x, family = stats::binomial, data = p)$fitted.values
