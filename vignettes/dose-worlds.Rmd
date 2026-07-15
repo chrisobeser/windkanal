@@ -1,0 +1,88 @@
+---
+title: "Dose worlds: when the amount matters more than the assignment"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dose worlds: when the amount matters more than the assignment}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Why a continuous treatment axis
+
+Not every psychotherapy question is a two-arm contrast. How many
+sessions a patient attends, how much alliance exposure they accumulate,
+how strongly a pairing matches: these are questions about *amount*, and
+forcing them into a binary treatment throws the question away before
+the analysis starts.
+
+Since version 0.2.0, `sim_stream(z_type = "dose")` draws a continuous
+exposure `z` uniform on [0, 1] instead of a binary arm. Everything else
+about the world stays the same: nesting, sessions, dropout, measurement
+error. All effect parameters act *per unit dose*, so `tau = 0.5` means:
+moving a patient from dose 0 to dose 1 shifts the outcome by 0.5.
+
+## Build a dose world
+
+```{r}
+library(windkanal)
+
+s <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
+                n_sessions = 4, z_level = "patient",
+                z_type = "dose",
+                tau = 0.5, tau_x = 0.5, icc = 0.10, seed = 1)
+range(s$z)
+head(s[, c("therapist_id", "patient_id", "session", "z", "x", "score")])
+```
+
+`z_level` keeps its meaning: `"therapist"` gives every patient of one
+therapist the same dose (a caseload-level exposure), `"patient"` varies
+the dose within therapists.
+
+Binary worlds are untouched: `z_type = "binary"` remains the default
+and reproduces earlier versions bit for bit under the same seed.
+
+## The same statistical trap, on a slope
+
+The point of a dose world is that the nesting problem does not go away
+when the treatment becomes continuous; it moves into the slope. A naive
+regression of outcome on dose treats every session row as independent
+evidence:
+
+```{r}
+p <- patients(s)                      # one row per patient
+naiv <- lm(score_mean ~ z, data = p)
+coef(summary(naiv))["z", , drop = FALSE]
+```
+
+The point estimate is fine in expectation; the standard error is the
+casualty, exactly as in the binary case, because patients still share
+therapists and sessions still share patients. A mixed model with a
+therapist intercept prices that dependence in. On a single world the
+two intervals just look different; run the pair over many seeds and the
+naive interval covers the truth far below its nominal rate, which is
+the package's core demonstration (see the main vignette).
+
+## Guard rails
+
+The arm-based CATE machinery (`fit_cate_*()`, `fit_het_grf()`) is
+built for binary contrasts. Handing it a dose world quietly would
+reinterpret a continuous `z` as two arms; windkanal refuses instead:
+
+```{r, error = TRUE}
+fit_cate_pai(p)
+```
+
+This is deliberate. A dose world answers dose questions (regression
+slopes, dose-response shapes); the binary CATE toolbox answers contrast
+questions. The error keeps the two from blending silently.
+
+## Where this is going
+
+The dose axis is the first step of a longer arc: treatment courses as
+processes rather than assignments, with recovery kinetics and a
+session-wise alliance as explicit model blocks. The public roadmap
+lives in the repository's issues.

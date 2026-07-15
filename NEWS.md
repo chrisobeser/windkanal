@@ -1,3 +1,12 @@
+# windkanal 0.2.1 (2026-07-16)
+
+- New vignette "Dose worlds: when the amount matters more than the
+  assignment": walkthrough for the continuous treatment axis shipped
+  in 0.2.0 (`z_type = "dose"`), including the nesting trap on the
+  dose slope and the guard rails of the arm-based CATE wrappers.
+- Documentation release: no changes to package code. Citation and
+  README version strings brought up to date.
+
 # windkanal 0.2.0 (2026-07-11)
 
 - Continuous treatment axis: `sim_stream(z_type = "dose")` draws a
