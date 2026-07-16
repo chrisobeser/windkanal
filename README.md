@@ -179,7 +179,7 @@ package's founding observation.
 ## Status
 
 **Work in progress.** windkanal is an early pre-release (version
-0.1.0) under active development: interfaces may still change, and the
+0.2.1) under active development: interfaces may still change, and the
 package is currently in its testing phase. That said, development is
 test-driven from the start: more than 220 unit tests, continuous
 integration on GitHub Actions, `R CMD check` clean, and the
@@ -229,7 +229,7 @@ citation("windkanal")
 
 Obeser, C. (2026). *windkanal: A simulation testbed for
 treatment-effect estimators under therapist nesting* (R package
-version 0.1.0). https://github.com/chrisobeser/windkanal
+version 0.2.1). https://github.com/chrisobeser/windkanal
 
 ## License
 
