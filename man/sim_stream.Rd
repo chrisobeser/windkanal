@@ -37,15 +37,23 @@ sim_stream(
   coupling_reverse = 0,
   alliance_ar = 0.75,
   reliability_alliance = 1,
-  seed
+  seed,
+  tau_xc_form = c("product", "misfit_quad", "similarity_abs", "fenster"),
+  fenster_delta = 0.5,
+  assignment = c("random", "soft_matching"),
+  assignment_strength = 0,
+  z_force = NULL
 )
 }
 \arguments{
-\item{n_therapists}{Number of therapists.}
+\item{n_therapists}{Number of therapists (single whole number).}
 
-\item{patients_per_therapist}{Cases per therapist.}
+\item{patients_per_therapist}{Cases per therapist (single whole
+number).}
 
-\item{n_sessions}{Maximum sessions per case (weekly).}
+\item{n_sessions}{Maximum sessions per case (weekly; single whole
+number). Fractional counts are refused: they used to run and leave
+surplus rows carrying \code{NA} in \code{therapist_id}, \code{z} and \code{score}.}
 
 \item{icc}{Therapist intraclass correlation, in \verb{[0, 1)}.}
 
@@ -60,7 +68,8 @@ but in how fast their patients improve. Empirical anchor: ~17\%
 of rate variance sits with therapists (Lutz et al., 2007).
 Default 0.}
 
-\item{weeks_accrual}{Accrual window (weeks) of staggered entry.}
+\item{weeks_accrual}{Accrual window (weeks) of staggered entry
+(single whole number).}
 
 \item{shape}{Shape of the improvement curve: \code{"linear"} (default,
 didactically simple) or \code{"loglinear"} -- the empirically
@@ -115,7 +124,8 @@ dimension, standard normal): contribution \code{tau_c * c_j}.
 Default 0.}
 
 \item{tau_xc}{\strong{Dyadic matching effect} -- the pairing itself
-matters: contribution \code{tau_xc * x_i * c_j}. Positive =
+matters: contribution \code{tau_xc * x_i * c_j} (default form; see
+\code{tau_xc_form}). Positive =
 high-x patients benefit more with high-c therapists (and low-x
 with low-c). Only this term makes "who benefits from \emph{whom}"
 expressible. With \code{tau_c != 0} or \code{tau_xc != 0} the stream
@@ -195,6 +205,69 @@ measurement, not in the mechanism).}
 
 \item{seed}{Random seed. Mandatory: reproducibility is not
 optional in the wind tunnel.}
+
+\item{tau_xc_form}{Functional form of the dyadic term:
+\code{"product"} (default; \code{x * c}, reproduces the old arithmetic
+bit-identically), \code{"misfit_quad"} (quadratic congruence
+\code{-(x - c)^2}), \code{"similarity_abs"} (\verb{-|x - c|}), or \code{"fenster"}
+(matching zone \verb{1\{|x - c| <= fenster_delta\}}). All forms are
+centered and scaled so that \code{tau_xc} is the SD of the dyadic
+contribution under independent standard-normal margins --
+comparable across forms; see \code{\link[=dyade_form]{dyade_form()}} for the constants.
+The form is a deterministic function of the already drawn
+\code{x} and \code{c}: no additional random draw, old seeds stay
+bit-identical.}
+
+\item{fenster_delta}{Window width for \code{tau_xc_form = "fenster"}
+(default 0.5). A \strong{single} finite number -- a vector would
+recycle silently and build a world with alternating window
+widths. Must lie in (0, 3]: beyond \code{delta = 3} the window
+catches almost every pair (\code{p > .96}) and the SD normalization
+divides by nearly zero -- the form degenerates to a constant.}
+
+\item{assignment}{Patient-therapist pairing: \code{"random"} (default;
+the old path, bit-identical) or \code{"soft_matching"} -- the
+informal matching of routine care: patient i lands with
+therapist j with probability proportional to
+\code{exp(assignment_strength * x_i * c_j)} among therapists with
+free capacity (caseloads stay exact). Creates the formation
+collider and range restriction on the fit surface that any
+routine-data application must survive; therapist \code{c} is then
+always drawn. Requires \code{icc_slope = 0} and \code{confounding = 0}
+(v1 limitations).}
+
+\item{assignment_strength}{Selection strength lambda (>= 0;
+0 = pairing probabilities uniform, but note the RNG stream
+differs from \code{"random"}). Practically relevant values are 0-2.
+Therapists without free capacity are excluded on the log scale
+(\code{-Inf}) instead of by multiplying the exponentiated weight with
+zero, and the exponent \code{lambda * x_i * c_j} is shifted by its own
+maximum \strong{only} when that maximum leaves the band
+\verb{[-700, 700]}. Both steps matter only in the extreme regime:
+previously \verb{exp(> 709)} ran to \code{Inf}, \code{Inf * 0} gave \code{NaN}, and
+\code{sample.int()} failed with a base-R message without any package
+context (measured: lambda up to 100 fine, lambda = 200 failed);
+the mirror case is underflow, where every available weight
+collapses to exactly 0. Inside the band the arithmetic is
+untouched and old seeds stay bit-identical.
+The argument is validated as a \strong{single finite number} in both
+branches (\code{NULL}, \code{NA}, \code{Inf} and vectors stop) -- a vector would
+recycle silently inside \code{exp(lambda * x_i * c_j)}. Under
+\code{assignment = "random"} the parameter has no effect at all, so a
+non-zero value stops as well instead of being swallowed: a run
+that looks like a selection world but is not one is the more
+expensive failure.}
+
+\item{z_force}{Counterfactual override of the treatment (\code{NULL},
+\code{0}, or \code{1}). With \code{0}/\code{1} the assignment is DRAWN exactly as
+usual (identical RNG consumption) and only then overwritten
+deterministically. This is the common-random-numbers lever for
+potential-outcome twin runs (see \code{\link[=wahrheit_skala]{wahrheit_skala()}}). CAVEAT:
+alignment holds only while no draw AFTER the assignment is
+conditional on \code{z}; \code{\link[=wahrheit_skala]{wahrheit_skala()}} guards this with an RNG
+end-state check, direct users of \code{z_force} must guard
+themselves. Binary treatment only. Default \code{NULL} = no
+intervention; old seeds stay bit-identical.}
 }
 \value{
 \code{data.frame} with one row per \strong{observed} session:

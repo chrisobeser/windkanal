@@ -32,7 +32,8 @@ plasmode_world <- function(kohorte, x_spalte, n_sessions = 4,
                            z_level = c("patient", "therapist"), seed) {
   tau_x_form <- match.arg(tau_x_form)
   z_level <- match.arg(z_level)
-  if (missing(seed)) stop("`seed` is mandatory.", call. = FALSE)
+  seed_pruefen(seed, missing(seed), "plasmode_world()",
+               "outcomes are drawn")
   stopifnot(all(c("patient_id", "therapist_id", x_spalte) %in%
                 names(kohorte)))
   k <- kohorte[!is.na(kohorte[[x_spalte]]), ]

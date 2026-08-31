@@ -30,7 +30,8 @@ fit_cate_merf <- function(stream, ntree = 300, iter = 20, B = 200,
            call. = FALSE)
     }
   }
-  if (missing(seed)) stop("`seed` is mandatory.", call. = FALSE)
+  seed_pruefen(seed, missing(seed), "fit_cate_merf()",
+               "the forest is stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_merf()")

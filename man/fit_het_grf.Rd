@@ -4,7 +4,12 @@
 \alias{fit_het_grf}
 \title{Heterogenitaets-Test des Causal Forest (Kalibrierungstest)}
 \usage{
-fit_het_grf(snap, num_trees = 500, forest_seed = 1L)
+fit_het_grf(
+  snap,
+  num_trees = 500,
+  forest_seed = 1L,
+  features = c("alle", "nur_x")
+)
 }
 \arguments{
 \item{snap}{Snapshot/Datenstrom aus \code{\link[=sim_stream]{sim_stream()}}.}
@@ -13,10 +18,16 @@ fit_het_grf(snap, num_trees = 500, forest_seed = 1L)
 
 \item{forest_seed}{Interner Forest-Seed (Default 1, deterministisch;
 die Reproduzierbarkeit des Experiments traegt der Stream-Seed).}
+
+\item{features}{Merkmalsmenge des Forests: \code{"alle"} (Default) =
+\code{cate_features()}, also \code{x}, \code{therapist_c} (falls der Strom es
+traegt) und alle \verb{x_noise*}; \code{"nur_x"} = allein \code{x} (das
+Verhalten bis 0.2.1, als deklarierter Naivling).}
 }
 \value{
 Benannter Vektor \code{c(estimate, se, p)} fuer die
-differentielle Forest-Vorhersage.
+differentielle Forest-Vorhersage, mit den Attributen \code{features}
+(gewaehlte Menge) und \code{feature_namen}.
 }
 \description{
 Beantwortet die Frage, die rohe \code{tau_hat}-Streuung NICHT
@@ -36,4 +47,30 @@ Verlangt binaeres Treatment: \code{grf::causal_forest} akzeptiert zwar
 stetiges W (partieller Effekt), aber der Kalibrierungstest ist im
 Paket nur fuer den Zwei-Arm-Kontrast validiert -- Dosis-Welten
 (\code{z_type = "dose"}) werden mit informativem Fehler abgewiesen.
+
+\strong{Der Test sieht nur, wonach er sucht.} Bis einschliesslich
+Version 0.2.1 bekam der Forest hier ausschliesslich \code{x}
+(\code{matrix(p$x, ncol = 1)}), waehrend \code{\link[=fit_cate_grf]{fit_cate_grf()}} ueber
+\code{cate_features()} zusaetzlich \code{therapist_c} und die
+\verb{x_noise*}-Spalten sieht. Eine rein \strong{dyadische} Heterogenitaet
+(\code{tau_xc != 0} bei \code{tau_x = 0}) lag damit ausserhalb der
+Merkmalsmenge und wurde als sauberes Null gemeldet -- in zehn
+Welten mit wahrem \code{SD(tau_i) = 1.53} null Treffer, waehrend
+dieselbe Staerke entlang \code{x} in fuenf von fuenf Welten mit
+Schaetzer ~1.00 erkannt wurde. Default ist deshalb seit 0.3.0
+\code{features = "alle"}, also dieselbe Merkmalsmenge wie
+\code{\link[=fit_cate_grf]{fit_cate_grf()}}. \code{features = "nur_x"} haelt die alte, enge
+Variante als \strong{Referenz-Naivling} verfuegbar: sie beantwortet die
+Frage nur entlang \code{x}, eine rein dyadische Heterogenitaet bleibt
+unentdeckt.
+}
+\examples{
+\donttest{
+if (requireNamespace("grf", quietly = TRUE)) {
+  s <- sim_stream(n_therapists = 20, patients_per_therapist = 10,
+                  n_sessions = 4, z_level = "patient",
+                  tau = 0.5, tau_x = 0.8, seed = 1)
+  fit_het_grf(s, num_trees = 200)
+}
+}
 }

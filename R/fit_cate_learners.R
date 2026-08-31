@@ -57,9 +57,8 @@ fit_cate_tlearner <- function(stream, num_trees = 500, B = 200, seed) {
     stop("fit_cate_tlearner() requires the 'ranger' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (forests are stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_tlearner()",
+               "forests are stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_tlearner()")
@@ -107,9 +106,8 @@ fit_cate_sboost <- function(stream, nrounds = 300, max_depth = 3,
     stop("fit_cate_sboost() requires the 'xgboost' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory.", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_sboost()",
+               "boosting is stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_sboost()")
@@ -149,9 +147,8 @@ fit_cate_xlearner <- function(stream, num_trees = 500, B = 200, seed) {
     stop("fit_cate_xlearner() requires the 'ranger' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (forests are stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_xlearner()",
+               "forests are stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_xlearner()")
@@ -202,9 +199,8 @@ fit_cate_drlearner <- function(stream, num_trees = 500, B = 200, seed) {
     stop("fit_cate_drlearner() requires the 'ranger' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (forests are stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_drlearner()",
+               "forests are stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_drlearner()")
@@ -257,9 +253,8 @@ fit_cate_rlearner <- function(stream, num_trees = 500, B = 200, seed) {
     stop("fit_cate_rlearner() requires the 'ranger' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (forests are stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_rlearner()",
+               "forests are stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_rlearner()")
@@ -300,9 +295,8 @@ fit_cate_rlearner <- function(stream, num_trees = 500, B = 200, seed) {
 #' @return As [fit_cate_tlearner()].
 #' @export
 fit_cate_pai <- function(stream, B = 200, seed) {
-  if (missing(seed)) {
-    stop("`seed` is mandatory (bootstrap is stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_pai()",
+               "the bootstrap is stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_pai()")
@@ -342,9 +336,8 @@ fit_cate_mob <- function(stream, num_trees = 200, B = 200, seed) {
     stop("fit_cate_mob() requires the 'model4you' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (forests are stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_mob()",
+               "forests are stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_mob()")

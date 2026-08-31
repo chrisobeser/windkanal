@@ -114,10 +114,8 @@ fit_cate_grf <- function(stream, num_trees = 1000, honesty = TRUE,
   if (!requireNamespace("grf", quietly = TRUE)) {
     stop("fit_cate_grf() requires the 'grf' package.", call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (the forest is stochastic).",
-         call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_grf()",
+               "the forest is stochastic")
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_grf()")
   X <- cate_features(p)
