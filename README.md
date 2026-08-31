@@ -215,10 +215,7 @@ package is currently in its testing phase. That said, development is
 test-driven from the start: more than 400 unit tests, continuous
 integration on GitHub Actions, `R CMD check` clean, and the
 data-generating equation has been independently reimplemented from its
-written specification and validated against the package. The first validation study is
-complete — sixteen estimators across fifteen pre-specified cells,
-62,100 estimator-world fits, every expectation version-controlled
-before execution — and its preprint is in preparation. Suitable
+written specification and validated against the package. Suitable
 today for
 methodological experiments and teaching; not yet for unsupervised
 production use.

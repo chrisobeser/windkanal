@@ -186,10 +186,6 @@ version"):
   package.
 
 * Added `CITATION.cff` (GitHub citation support).
-- First full validation program complete: sixteen estimators across
-  fifteen pre-specified cells, 62,100 estimator-world fits, all
-  expectations version-controlled before execution. Preprint in
-  preparation.
 
 # windkanal 0.1.0 (2026-07-06)
 
