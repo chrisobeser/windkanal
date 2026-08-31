@@ -1,17 +1,20 @@
 Package: windkanal
-Title: Simulation Testbed for Living Clinical Data Systems
-Version: 0.2.1
+Title: Stochastic Simulation Testbed for Living Clinical Data Systems
+Version: 0.3.0
 Authors@R:
     person("Christian", "Obeser", email = "gersari99@gmail.com",
            role = c("aut", "cre"))
-Description: A wind tunnel for living clinical data systems: simulates
-    growing routine-care data streams (session-wise outcomes, patients
-    nested in therapists, staggered patient entry) so that estimators
+Description: A wind tunnel for living clinical data systems: stochastic
+    (Monte Carlo) simulation of growing routine-care data streams
+    (session-wise outcomes, patients nested in therapists, staggered
+    patient entry) so that estimators
     (e.g. heterogeneous treatment effect methods) and analysis
     governance protocols (continuous peeking vs. release gates) can be
     stress-tested against known ground truth before touching real
     clinical data. Settings are configurable; calibrated presets and a
-    plasmode mode are planned.
+    plasmode mode ship with the package.
+URL: https://github.com/chrisobeser/windkanal
+BugReports: https://github.com/chrisobeser/windkanal/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

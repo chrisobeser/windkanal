@@ -1,3 +1,37 @@
+# internal: the package-wide seed rule. `missing(seed)` alone does not
+# carry it -- an explicitly passed NULL passes missing() unnoticed and
+# sends set.seed() to the clock.
+seed_pruefen <- function(seed, fehlt, wo, grund = NULL) {
+  if (!fehlt && is.numeric(seed) && length(seed) == 1L &&
+      is.finite(seed)) {
+    return(invisible(TRUE))
+  }
+  erhalten <- if (fehlt) {
+    "nothing (the argument is missing)"
+  } else if (is.null(seed)) {
+    "NULL"
+  } else if (length(seed) != 1L) {
+    paste0("a vector of length ", length(seed))
+  } else if (!is.numeric(seed)) {
+    paste0("an object of type ", typeof(seed))
+  } else {
+    "NA, NaN or Inf"
+  }
+  stop("`seed` is mandatory in ", wo,
+       if (is.null(grund)) "" else paste0(" (", grund, ")"),
+       " and must be a single finite number: a wind-tunnel run must be ",
+       "reproducible. Received: ", erhalten, ".",
+       if (!fehlt && is.null(seed)) {
+         paste0(" Note that `seed = NULL` is NOT a missing argument -- ",
+                "it passes missing(), and set.seed(NULL) re-seeds the ",
+                "generator from clock time and process id, so the run ",
+                "would not be reproducible. This is the case that ",
+                "arises when a seed is passed through programmatically ",
+                "and the source is empty.")
+       } else "",
+       call. = FALSE)
+}
+
 #' Simulate a growing routine-care data stream
 #'
 #' Generates the wind-tunnel data stream: patients are nested in
@@ -16,9 +50,12 @@
 #' `dropout = 0`): effects, personalization, or dropout must be
 #' switched on explicitly.
 #'
-#' @param n_therapists Number of therapists.
-#' @param patients_per_therapist Cases per therapist.
-#' @param n_sessions Maximum sessions per case (weekly).
+#' @param n_therapists Number of therapists (single whole number).
+#' @param patients_per_therapist Cases per therapist (single whole
+#'   number).
+#' @param n_sessions Maximum sessions per case (weekly; single whole
+#'   number). Fractional counts are refused: they used to run and leave
+#'   surplus rows carrying `NA` in `therapist_id`, `z` and `score`.
 #' @param icc Therapist intraclass correlation, in `[0, 1)`.
 #' @param mean_slope Mean change per session (negative = symptom
 #'   reduction).
@@ -28,7 +65,8 @@
 #'   but in how fast their patients improve. Empirical anchor: ~17%
 #'   of rate variance sits with therapists (Lutz et al., 2007).
 #'   Default 0.
-#' @param weeks_accrual Accrual window (weeks) of staggered entry.
+#' @param weeks_accrual Accrual window (weeks) of staggered entry
+#'   (single whole number).
 #' @param shape Shape of the improvement curve: `"linear"` (default,
 #'   didactically simple) or `"loglinear"` -- the empirically
 #'   supported form (negatively accelerated: largest gains early,
@@ -73,12 +111,61 @@
 #'   dimension, standard normal): contribution `tau_c * c_j`.
 #'   Default 0.
 #' @param tau_xc **Dyadic matching effect** -- the pairing itself
-#'   matters: contribution `tau_xc * x_i * c_j`. Positive =
+#'   matters: contribution `tau_xc * x_i * c_j` (default form; see
+#'   `tau_xc_form`). Positive =
 #'   high-x patients benefit more with high-c therapists (and low-x
 #'   with low-c). Only this term makes "who benefits from *whom*"
 #'   expressible. With `tau_c != 0` or `tau_xc != 0` the stream
 #'   carries the column `therapist_c` (observable to estimators).
 #'   Default 0.
+#' @param tau_xc_form Functional form of the dyadic term:
+#'   `"product"` (default; `x * c`, reproduces the old arithmetic
+#'   bit-identically), `"misfit_quad"` (quadratic congruence
+#'   `-(x - c)^2`), `"similarity_abs"` (`-|x - c|`), or `"fenster"`
+#'   (matching zone `1{|x - c| <= fenster_delta}`). All forms are
+#'   centered and scaled so that `tau_xc` is the SD of the dyadic
+#'   contribution under independent standard-normal margins --
+#'   comparable across forms; see [dyade_form()] for the constants.
+#'   The form is a deterministic function of the already drawn
+#'   `x` and `c`: no additional random draw, old seeds stay
+#'   bit-identical.
+#' @param fenster_delta Window width for `tau_xc_form = "fenster"`
+#'   (default 0.5). A **single** finite number -- a vector would
+#'   recycle silently and build a world with alternating window
+#'   widths. Must lie in (0, 3]: beyond `delta = 3` the window
+#'   catches almost every pair (`p > .96`) and the SD normalization
+#'   divides by nearly zero -- the form degenerates to a constant.
+#' @param assignment Patient-therapist pairing: `"random"` (default;
+#'   the old path, bit-identical) or `"soft_matching"` -- the
+#'   informal matching of routine care: patient i lands with
+#'   therapist j with probability proportional to
+#'   `exp(assignment_strength * x_i * c_j)` among therapists with
+#'   free capacity (caseloads stay exact). Creates the formation
+#'   collider and range restriction on the fit surface that any
+#'   routine-data application must survive; therapist `c` is then
+#'   always drawn. Requires `icc_slope = 0` and `confounding = 0`
+#'   (v1 limitations).
+#' @param assignment_strength Selection strength lambda (>= 0;
+#'   0 = pairing probabilities uniform, but note the RNG stream
+#'   differs from `"random"`). Practically relevant values are 0-2.
+#'   Therapists without free capacity are excluded on the log scale
+#'   (`-Inf`) instead of by multiplying the exponentiated weight with
+#'   zero, and the exponent `lambda * x_i * c_j` is shifted by its own
+#'   maximum **only** when that maximum leaves the band
+#'   `[-700, 700]`. Both steps matter only in the extreme regime:
+#'   previously `exp(> 709)` ran to `Inf`, `Inf * 0` gave `NaN`, and
+#'   `sample.int()` failed with a base-R message without any package
+#'   context (measured: lambda up to 100 fine, lambda = 200 failed);
+#'   the mirror case is underflow, where every available weight
+#'   collapses to exactly 0. Inside the band the arithmetic is
+#'   untouched and old seeds stay bit-identical.
+#'   The argument is validated as a **single finite number** in both
+#'   branches (`NULL`, `NA`, `Inf` and vectors stop) -- a vector would
+#'   recycle silently inside `exp(lambda * x_i * c_j)`. Under
+#'   `assignment = "random"` the parameter has no effect at all, so a
+#'   non-zero value stops as well instead of being swallowed: a run
+#'   that looks like a selection world but is not one is the more
+#'   expensive failure.
 #' @param tau_shape Time course of the z-effect: `"constant"`
 #'   (default -- full size from session 1) or `"ramp"` -- the effect
 #'   grows linearly (`session / n_sessions`), reaching full size
@@ -138,6 +225,16 @@
 #'   `tau_x * reliability_x`).
 #' @param seed Random seed. Mandatory: reproducibility is not
 #'   optional in the wind tunnel.
+#' @param z_force Counterfactual override of the treatment (`NULL`,
+#'   `0`, or `1`). With `0`/`1` the assignment is DRAWN exactly as
+#'   usual (identical RNG consumption) and only then overwritten
+#'   deterministically. This is the common-random-numbers lever for
+#'   potential-outcome twin runs (see [wahrheit_skala()]). CAVEAT:
+#'   alignment holds only while no draw AFTER the assignment is
+#'   conditional on `z`; [wahrheit_skala()] guards this with an RNG
+#'   end-state check, direct users of `z_force` must guard
+#'   themselves. Binary treatment only. Default `NULL` = no
+#'   intervention; old seeds stay bit-identical.
 #'
 #' @return `data.frame` with one row per **observed** session:
 #'   `therapist_id`, `z`, `patient_id`, `x`, `entry_week`,
@@ -181,10 +278,53 @@ sim_stream <- function(n_therapists = 10,
                        coupling_reverse = 0,
                        alliance_ar = 0.75,
                        reliability_alliance = 1,
-                       seed) {
+                       seed,
+                       # new in 0.3.0 -- appended after `seed` so every
+                       # positional call written against 0.2.1 keeps its
+                       # meaning (argument 1..33 unchanged)
+                       tau_xc_form = c("product", "misfit_quad",
+                                       "similarity_abs", "fenster"),
+                       fenster_delta = 0.5,
+                       assignment = c("random", "soft_matching"),
+                       assignment_strength = 0,
+                       z_force = NULL) {
   shape <- match.arg(shape)
   tau_shape <- match.arg(tau_shape)
   tau_x_form <- match.arg(tau_x_form)
+  tau_xc_form <- match.arg(tau_xc_form)
+  fenster_delta_pruefen(fenster_delta)
+  assignment <- match.arg(assignment)
+  if (!is.numeric(assignment_strength) ||
+      length(assignment_strength) != 1L ||
+      !is.finite(assignment_strength)) {
+    stop("assignment_strength muss eine einzelne endliche Zahl sein ",
+         "(ein Vektor wuerde in exp(lambda * x * c) still recyceln und ",
+         "eine Selektionsstaerke vortaeuschen, die so nicht gemeint ",
+         "war).", call. = FALSE)
+  }
+  if (assignment == "random" && assignment_strength != 0) {
+    stop("assignment_strength wirkt nur unter assignment = ",
+         "\"soft_matching\": unter \"random\" werden Patienten ohne ",
+         "Ansehen von x und c verteilt, ein lambda != 0 wuerde still ",
+         "verschluckt und der Lauf saehe wie eine Selektionswelt aus, ",
+         "die er nicht ist. Fuer Paarbildung nach exp(lambda * x * c): ",
+         "assignment = \"soft_matching\" setzen; sonst ",
+         "assignment_strength = 0 (Default) lassen.", call. = FALSE)
+  }
+  if (assignment == "soft_matching") {
+    stopifnot(assignment_strength >= 0)
+    if (icc_slope > 0) {
+      stop("assignment = \"soft_matching\" requires icc_slope = 0 ",
+           "(v1 limitation: therapist slope shares are drawn before ",
+           "the pairing step). Note that preset(\"ambulanz_de\") sets ",
+           "icc_slope = 0.17 -- combining the two needs an explicit ",
+           "icc_slope = 0 after the preset.", call. = FALSE)
+    }
+    if (confounding != 0) {
+      stop("assignment = \"soft_matching\" with confounding != 0 ",
+           "is not implemented.", call. = FALSE)
+    }
+  }
   z_level <- match.arg(z_level)
   z_type <- match.arg(z_type)
   stopifnot(n_noise >= 0)
@@ -198,10 +338,14 @@ sim_stream <- function(n_therapists = 10,
               "(dose is drawn uniform on [0, 1]).", call. = FALSE)
     }
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory: a wind-tunnel run must be reproducible.",
-         call. = FALSE)
+  if (!is.null(z_force)) {
+    stopifnot(length(z_force) == 1L, z_force %in% c(0, 1))
+    if (z_type != "binary") {
+      stop("z_force requires z_type = \"binary\".", call. = FALSE)
+    }
+    z_force <- as.integer(z_force)
   }
+  seed_pruefen(seed, missing(seed), "sim_stream()")
   stopifnot(
     n_therapists >= 1, patients_per_therapist >= 1,
     n_sessions >= 1, weeks_accrual >= 1,
@@ -213,6 +357,18 @@ sim_stream <- function(n_therapists = 10,
     reliability_x > 0, reliability_x <= 1,
     icc_alliance >= 0, icc_alliance < 1
   )
+  for (nm in c("n_therapists", "patients_per_therapist", "n_sessions",
+               "weeks_accrual")) {
+    v <- get(nm)
+    if (length(v) != 1L || !is.numeric(v) || !is.finite(v) ||
+        v != round(v)) {
+      stop("`", nm, "` must be a single whole number. A fractional ",
+           "value does not stop the run, it contaminates it: the ",
+           "patient count and the therapist vector are built from ",
+           "different roundings, and the surplus rows carry NA in ",
+           "therapist_id and score without any warning.", call. = FALSE)
+    }
+  }
   if ((coupling != 0 || coupling_reverse != 0) && !alliance) {
     stop("coupling/coupling_reverse require alliance = TRUE.",
          call. = FALSE)
@@ -247,6 +403,7 @@ sim_stream <- function(n_therapists = 10,
       n_treated <- round(p_treated * n_therapists)
       z <- integer(n_therapists)
       z[sample.int(n_therapists, n_treated)] <- 1L
+      if (!is.null(z_force)) z <- rep(z_force, n_therapists)
     } else {
       # dose mode: continuous exposure per therapist, uniform on [0, 1]
       # (new branch; binary draw order stays bit-identical)
@@ -268,6 +425,7 @@ sim_stream <- function(n_therapists = 10,
       # dose mode: continuous exposure per patient, uniform on [0, 1]
       stats::runif(n_patients)
     }
+    if (!is.null(z_force)) z_pat <- rep(z_force, n_patients)
   }
   baseline   <- rnorm(n_patients, mean = 0, sd = 1)
   # slope decomposition: patient share + (optional) therapist share;
@@ -283,6 +441,7 @@ sim_stream <- function(n_therapists = 10,
   if (z_level == "patient" && confounding != 0) {
     p_i   <- stats::plogis(stats::qlogis(p_treated) + confounding * x)
     z_pat <- stats::rbinom(n_patients, 1L, p_i)
+    if (!is.null(z_force)) z_pat <- rep(z_force, n_patients)
   }
 
   # long format: one row per (planned) session
@@ -292,8 +451,28 @@ sim_stream <- function(n_therapists = 10,
   # therapist attribute c: only drawn when it acts (otherwise the
   # draw order of old seeds would not be preserved)
   c_th <- NULL
-  if (tau_c != 0 || tau_xc != 0) {
+  if (tau_c != 0 || tau_xc != 0 || assignment == "soft_matching") {
     c_th <- rnorm(n_therapists, mean = 0, sd = 1)
+  }
+  # informal soft matching of routine care: pairing depends on x*c --
+  # P(j | i) proportional to exp(lambda * x_i * c_j) among therapists
+  # with free capacity. Extra RNG draws happen ONLY in this branch;
+  # assignment = "random" leaves the old path (and all old seeds)
+  # untouched. Consumers of therapist_id (u, c_th, z_of_row, output)
+  # all read the REBUILT mapping below.
+  if (assignment == "soft_matching") {
+    kap <- rep(patients_per_therapist, n_therapists)
+    neu <- integer(n_patients)
+    for (i in seq_len(n_patients)) {
+      lp <- assignment_strength * x[i] * c_th
+      lp[kap <= 0] <- -Inf
+      spitze <- max(lp)
+      if (is.finite(spitze) && abs(spitze) > 700) lp <- lp - spitze
+      pj <- exp(lp)
+      j <- sample.int(n_therapists, 1L, prob = pj)
+      neu[i] <- j; kap[j] <- kap[j] - 1L
+    }
+    therapist_id <- neu
   }
   # noise features: inert, only a distraction for estimators
   x_noise <- NULL
@@ -311,7 +490,14 @@ sim_stream <- function(n_therapists = 10,
               quadratic = x[idx]^2 - 1)
   te <- tau + tau_x * h        # person-specific z-effect
   if (!is.null(c_th)) {        # + therapist/dyad share
-    te <- te + (tau_c + tau_xc * x[idx]) * c_th[therapist_id[idx]]
+    if (tau_xc_form == "product") {
+      # old arithmetic verbatim -> old seeds stay bit-identical
+      te <- te + (tau_c + tau_xc * x[idx]) * c_th[therapist_id[idx]]
+    } else {
+      cj <- c_th[therapist_id[idx]]
+      te <- te + tau_c * cj +
+        tau_xc * dyade_form(x[idx], cj, tau_xc_form, fenster_delta)
+    }
   }
   if (tau_shape == "ramp") {   # effect grows over the sessions
     te <- te * (session / n_sessions)

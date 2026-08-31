@@ -49,9 +49,8 @@
 #' @export
 sim_items <- function(stream, items, loading = 0.7, careless = 0,
                       seconds_per_item = 7, refusal = 0, seed) {
-  if (missing(seed)) {
-    stop("`seed` ist Pflicht.", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "sim_items()",
+               "item responses are drawn")
   stopifnot(is.data.frame(items),
             all(c("item", "n_options", "reversed") %in% names(items)),
             !anyNA(items$n_options), all(items$n_options >= 2))

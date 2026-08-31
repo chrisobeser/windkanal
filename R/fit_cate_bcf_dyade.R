@@ -29,9 +29,8 @@ fit_cate_bcf_dyade <- function(stream, nburn = 500, nsim = 500,
     stop("fit_cate_bcf_dyade() requires the 'stochtree' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_bcf_dyade()",
+               "MCMC is stochastic")
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_bcf_dyade()")
   if (is.null(p$therapist_c)) {

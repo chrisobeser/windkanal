@@ -23,7 +23,8 @@ fit_z_brms <- local({
     if (!requireNamespace("brms", quietly = TRUE)) {
       stop("fit_z_brms() requires the 'brms' package.", call. = FALSE)
     }
-    if (missing(seed)) stop("`seed` is mandatory.", call. = FALSE)
+    seed_pruefen(seed, missing(seed), "fit_z_brms()",
+                 "MCMC is stochastic")
     d <- as.data.frame(stream)
     if (is.null(cache$modell)) {
       cache$modell <- brms::brm(

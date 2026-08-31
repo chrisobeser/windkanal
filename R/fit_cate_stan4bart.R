@@ -34,9 +34,8 @@ fit_cate_stan4bart <- function(stream, chains = 2, warmup = 500,
   if (!"dbarts" %in% .packages()) {
     suppressMessages(try(attachNamespace("dbarts"), silent = TRUE))
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_stan4bart()",
+               "MCMC is stochastic")
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_stan4bart()")
   d <- as.data.frame(cate_features(p))

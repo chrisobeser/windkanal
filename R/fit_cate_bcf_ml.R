@@ -37,9 +37,8 @@ fit_cate_bcf_ml <- function(stream, nburn = 500, nsim = 500,
     stop("fit_cate_bcf_ml() requires the 'stochtree' package.",
          call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_bcf_ml()",
+               "MCMC is stochastic")
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_bcf_ml()")
   x <- as.data.frame(cate_features(p))

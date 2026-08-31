@@ -35,9 +35,8 @@ fit_cate_bcf <- function(stream, nburn = 500, nsim = 500,
   if (!requireNamespace("bcf", quietly = TRUE)) {
     stop("fit_cate_bcf() requires the 'bcf' package.", call. = FALSE)
   }
-  if (missing(seed)) {
-    stop("`seed` is mandatory (MCMC is stochastic).", call. = FALSE)
-  }
+  seed_pruefen(seed, missing(seed), "fit_cate_bcf()",
+               "MCMC is stochastic")
   set.seed(seed)
   # bcf dumps tree log files into the working directory -- clean up,
   # but only those it newly created itself

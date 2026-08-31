@@ -4,9 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](#status)
 
-**A wind tunnel for psychotherapy statistics: simulated clinics in
-which the true effects are known, so you can test your tools before
-they meet real data.**
+**A wind tunnel for psychotherapy statistics: stochastically simulated
+clinics in which the true effects are known, so you can test your
+tools before they meet real data.**
 
 Psychotherapy data have a shape of their own. Patients are nested in
 therapists, outcomes arrive session by session, people drop out, and
@@ -15,7 +15,12 @@ work beautifully elsewhere can fail quietly under exactly these
 conditions, and on real data nobody notices, because the truth is
 unknown. windkanal builds artificial outpatient clinics in which the
 truth is known by construction. Whatever your estimator claims can
-then be checked against what was actually put into the world.
+then be checked against what was actually put into the world. This is
+stochastic (Monte Carlo) simulation with controlled randomness: each
+world is a fresh random draw from an explicit data-generating
+equation, performance is measured as frequencies across many worlds,
+and every run is exactly reproducible from its seed on the same
+machine and package versions.
 
 ## What you can do with it
 
@@ -34,6 +39,27 @@ many seeded worlds; `mc_summary()` turns the answers into error
 rates: bias, interval coverage, false alarms, ranking quality, and
 PEHE.
 
+**Ask who fits whom.** The dyadic term has a shape, and the shape
+matters: `sim_stream(tau_xc_form = )` offers the product, quadratic
+congruence, absolute similarity, and a matching window, all scaled so
+that `tau_xc` means the same amplitude in each (`dyade_form()`).
+`assignment = "soft_matching"` replaces random allocation with the
+informal matching of routine care, which is where the formation
+collider comes from. `fit_cate_dyade_v2p()` decomposes every
+posterior draw of the effect surface into `tau0 + f(x) + g(c) +
+h(x, c)`, so the genuinely dyadic part can be measured against the
+truth that `dyade_h_wahr()` supplies. Its detection and naming
+thresholds were calibrated on static product-form worlds; outside
+that regime they transfer without a guarantee, and the naming layer
+is exploratory.
+
+**Put the outcome on a real questionnaire scale.**
+`skala_begrenzen()` maps the latent score onto a bounded integer
+scale with floor, ceiling, and optional skew (BDI/PHQ style).
+`wahrheit_skala()` then reports the true effect on both the latent
+and the observed scale, because a ceiling manufactures apparent
+effect heterogeneity where the latent effect is homogeneous.
+
 **Test analysis habits, not just estimators.** `snapshot()` and
 `replay()` freeze and replay a growing data stream, so continuous
 peeking can be compared with preregistered release gates
@@ -48,7 +74,7 @@ with reliability as a measured attribute rather than an assumption.
 
 ## The estimator zoo
 
-Seventeen estimator wrappers run behind one uniform interface:
+Twenty-one estimator wrappers run behind one uniform interface:
 
 - **Naive OLS** (`fit_z_naive`) — treats every session as
   independent; the field's historical default and the built-in
@@ -90,6 +116,11 @@ Seventeen estimator wrappers run behind one uniform interface:
 - **Dyadic BCF** (`fit_cate_bcf_dyade`) — multilevel BCF with an
   explicit patient-by-therapist product feature, for
   matching-effect experiments
+- **Dyadic BCF with decomposition** (`fit_cate_dyade_v2p`) — the
+  same fit, plus a draw-wise double-centring of the effect surface
+  into `tau0 + f(x) + g(c) + h(x, c)`; the person ranking is
+  untouched, but the genuinely dyadic component becomes a quantity
+  with a posterior (`v2p_entscheidung`, `v2p_benennung`)
 
 Average-effect inference for the learners uses a therapist-cluster
 bootstrap; performance measures include dual coverage definitions,
@@ -179,9 +210,9 @@ package's founding observation.
 ## Status
 
 **Work in progress.** windkanal is an early pre-release (version
-0.2.1) under active development: interfaces may still change, and the
+0.3.0) under active development: interfaces may still change, and the
 package is currently in its testing phase. That said, development is
-test-driven from the start: more than 220 unit tests, continuous
+test-driven from the start: more than 400 unit tests, continuous
 integration on GitHub Actions, `R CMD check` clean, and the
 data-generating equation has been independently reimplemented from its
 written specification and validated against the package. The first validation study is
@@ -213,8 +244,11 @@ the issue tracker.
       beyond straightlining, item-level missingness with prorating,
       and response shift (participants recalibrating their answer
       scale over the course of therapy)
-- [ ] **Bounded and skewed outcomes**: floor and ceiling effects for
-      questionnaire-realistic score distributions
+- [x] **Bounded and skewed outcomes** (shipped in v0.3.0:
+      `skala_begrenzen()`, `skala_werte()`, `wahrheit_skala()` —
+      floor and ceiling effects for questionnaire-realistic score
+      distributions, with the true effect reported on the latent
+      *and* the observed scale)
 - [ ] **Community presets**: calibrated settings for other services
       and countries, contributed with mandatory sources
 - [ ] **Shiny design explorer**: interactive what-if for clustered
@@ -227,9 +261,9 @@ the issue tracker.
 citation("windkanal")
 ```
 
-Obeser, C. (2026). *windkanal: A simulation testbed for
-treatment-effect estimators under therapist nesting* (R package
-version 0.2.1). https://github.com/chrisobeser/windkanal
+Obeser, C. (2026). *windkanal: Stochastic Simulation Testbed for
+Living Clinical Data Systems* (R package version 0.3.0).
+https://github.com/chrisobeser/windkanal
 
 ## License
 

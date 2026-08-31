@@ -30,7 +30,8 @@ fit_cate_gpboost <- function(stream, nrounds = 300, learning_rate = 0.1,
     stop("fit_cate_gpboost() requires the 'gpboost' package.",
          call. = FALSE)
   }
-  if (missing(seed)) stop("`seed` is mandatory.", call. = FALSE)
+  seed_pruefen(seed, missing(seed), "fit_cate_gpboost()",
+               "boosting is stochastic")
   set.seed(seed)
   p <- patients(stream)
   z_binaer_pruefen(p, "fit_cate_gpboost()")

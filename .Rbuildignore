@@ -1,0 +1,6 @@
+^\.github$
+^CITATION\.cff$
+^CONTRIBUTING\.md$
+^windkanal\.Rproj$
+^\.Rproj\.user$
+^\.DS_Store$
